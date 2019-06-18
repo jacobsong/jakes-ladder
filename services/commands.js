@@ -10,72 +10,19 @@ const help = () => {
   const embed = new Discord.RichEmbed()
     .setTitle("Command List")
     .setColor("BLUE")
-    .setDescription(`
-    **register** 
-    - Registers yourself
-
-    **register** *<user>*
-    - Registers the mentioned user
-
-    **profile** 
-    - Returns stats for yourself
-
-    **profile** *<user>*
-    - Returns stats for the mentioned user
-
-    **leaderboard**
-    - Shows the leaderboard
-
-    **record** *<winner> <games-won> <loser> <games-won>* 
-    - Records a match between 2 players
-    - Example: \`=record @winner 3 @loser 1\`
-
-    **reset** *<user>*
-    - Resets stats for the mentioned user
-
-    **resetboard**
-    - This resets the leaderboard
-    `);
+    .addField("**register**", "- Registers yourself")
+    .addField("**register** *<user>*", "- Registers the mentioned user")
+    .addField("**profile**", "- Returns stats for yourself")
+    .addField("**profile** *<user>*", "- Returns stats for the mentioned user")
+    .addField("**leaderboard**", "- Shows the leaderboard")
+    .addField("**reset** *<user>*", "- Resets stats for the mentioned user")
+    .addField("**resetboard**", "- Resets the leaderboard")
+    .addField("**decay**", "- Decays ELO for players that have not played a match in 7 days")
+    .addField("**record** *<user>* *<games-won>* *<user>* *<games-won>*",
+      ["- Records a match between 2 players", "- Example: \`=record @vizi 3 @sack 1\`"]);
 
   return embed;
 }
-
-const leaderboard = async () => {
-  const arr = ["joe", "matt", "alex"];
-  let board = "```";
-
-  for (let index = 0; index < arr.length; index++) {
-    board += `#${index + 1} - ELO: 1000 ${arr[index]}\n`;
-  }
-  board += "```";
-
-  const embed = new Discord.RichEmbed()
-    .setTitle("Big Dick Playas")
-    .setColor("GOLD")
-    .setDescription(board);
-
-  return embed;
-}
-
-const profile = async msg => {
-  const embed = new Discord.RichEmbed();
-
-  try {
-    const profile = await Player.findOne({ discordId: discordid }).lean();
-    if (profile) {
-      embed.setColor("BLUE");
-      embed.setDescription("profile found");
-      return embed;
-    }
-    embed.setColor("RED");
-    embed.setDescription("profile not found");
-    return embed;
-  } catch {
-    embed.setColor("RED");
-    embed.setDescription("error");
-    return embed;
-  }
-};
 
 const register = async (msg) => {
   const msgArr = msg.content.split(" ");
@@ -105,9 +52,41 @@ const register = async (msg) => {
   }
 }
 
-const record = async (msg) => {
+const profile = async msg => {
   const embed = new Discord.RichEmbed();
-  return embed
+
+  try {
+    const profile = await Player.findOne({ discordId: discordid }).lean();
+    if (profile) {
+      embed.setColor("BLUE");
+      embed.setDescription("profile found");
+      return embed;
+    }
+    embed.setColor("RED");
+    embed.setDescription("profile not found");
+    return embed;
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("error");
+    return embed;
+  }
+};
+
+const leaderboard = async () => {
+  const arr = ["A | MB | FoFo", "matt", "alex"];
+  let board = "```";
+
+  for (let index = 0; index < arr.length; index++) {
+    board += `#${index + 1} - ELO: 1000 ${arr[index]}\n`;
+  }
+  board += "```";
+
+  const embed = new Discord.RichEmbed()
+    .setTitle("Big Dick Playas")
+    .setColor("GOLD")
+    .setDescription(board);
+
+  return embed;
 }
 
 const reset = async (msg) => {
@@ -116,6 +95,16 @@ const reset = async (msg) => {
 }
 
 const resetboard = async (msg) => {
+  const embed = new Discord.RichEmbed();
+  return embed
+}
+
+const decay = async (msg) => {
+  const embed = new Discord.RichEmbed();
+  return embed
+}
+
+const record = async (msg) => {
   const embed = new Discord.RichEmbed();
   return embed
 }
@@ -135,10 +124,11 @@ const changeHandle = async (id, handle) => {
 
 module.exports = {
   help,
-  leaderboard,
-  profile,
   register,
-  record,
+  profile,
+  leaderboard,
   reset,
-  resetboard
+  resetboard,
+  decay,
+  record
 };

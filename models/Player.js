@@ -5,7 +5,8 @@ const playerSchema = new Schema(
   {
     discordId: String,
     discordName: String,
-    date: { type: Date, default: Date.now },
+    registerDate: { type: Date, default: Date.now },
+    lastMatch: Date,
     elo: { type: Number, default: 1000 },
     wins: { type: Number, default: 0 },
     losses: { type: Number, default: 0 }

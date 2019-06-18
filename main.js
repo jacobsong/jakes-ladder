@@ -5,7 +5,7 @@ const commands = require("./services/commands");
 const client = new Discord.Client();
 const prefix = "=";
 
-// Connect to Discord
+// Verify connected and set presence
 client.once("ready", () => {
   console.log("Connected as " + client.user.tag);
   client.user.setPresence({ game: { name: "type =help" } });
@@ -21,48 +21,47 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true 
   }
 );
 
-client.on("userUpdate", (oldUser, newUser) => {
+// Update usernames in DB when users change usernames
+client.on("userUpdate", async (oldUser, newUser) => {
   console.log("old: ");
-  console.log(oldUser);
+  await console.log(oldUser);
   console.log("new: ");
   console.log(newUser);
 });
 
 client.on("message", async message => {
-  if (message.content === `${prefix}leaderboard`) {
-    const embed = await commands.leaderboard();
-    message.channel.send(embed);
+  if (message.content.startsWith(`${prefix}profile`)) {
+    await commands.profile(message)
   }
 
-  if (message.content.startsWith(`${prefix}profile`)) {
-    const embed = await commands.profile(message);
-    message.channel.send(embed);
+  if (message.content.startsWith(`${prefix}register`)) {
+    await commands.register(message);
   }
 
   if (message.channel.name === "leaderboard") {
 
     if (message.content === `${prefix}help`) {
-      const embed = commands.help();
-      message.channel.send(embed);
+      commands.help();
     }
 
-    if (message.content.startsWith(`${prefix}register`)) {
-      await commands.register(message);
-    }
-
-    if (message.content.startsWith(`${prefix}record`)) {
-      const embed = await commands.record(message);
-      message.channel.send(embed);
+    if (message.content === `${prefix}leaderboard`) {
+      await commands.leaderboard()
     }
 
     if (message.content.startsWith(`${prefix}reset`)) {
-      const embed = await commands.reset(message);
-      message.channel.send(embed);
+      await commands.reset(message);
     }
 
     if (message.content === `${prefix}resetboard`) {
-      const embed = await commands.resetboard(message);
-      message.channel.send(embed);
+      await commands.resetboard(message);
+    }
+
+    if (message.content === `${prefix}decay`) {
+      await commands.decay(message);
+    }
+
+    if (message.content.startsWith(`${prefix}record`)) {
+      await commands.record(message);
     }
   }
 });
