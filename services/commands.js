@@ -25,18 +25,21 @@ const register = async (msg) => {
     let playerId = msg.author.id;
     let playerName = msg.author.username;
     let playerAvatar = msg.author.avatarURL;
+    let playerMember = msg.member;
 
     const result = validator.checkArgs(msg);
     if (result.errors) { msg.channel.send(result.errors); return; }
     if (result.numArgs > 0) {
       let errors = validator.checkMod(msg);
       if (errors) { msg.channel.send(errors); return; }
-      errors = validator.checkMember(msg.mentions.members.first());
-      if (errors) { msg.channel.send(errors); return; }
       playerId = msg.mentions.users.first().id;
       playerName = msg.mentions.users.first().username;
       playerAvatar = msg.mentions.users.first().avatarURL;
+      playerMember = msg.mentions.members.first();
     }
+
+    const memberErrors = validator.checkMember(playerMember);
+    if (memberErrors) { msg.channel.send(memberErrors); return; }
 
     const embed = new Discord.RichEmbed();
 
@@ -83,23 +86,25 @@ const profile = async msg => {
     const embed = new Discord.RichEmbed();
 
     try {
-      const existingPlayer = await Player.find({ discordId: playerId }).limit(1);
+      const profile = await Player.findOne({ discordId: playerId }).lean();
 
-      if (existingPlayer.length) {
-        embed.setColor("GREEN");
-        embed.setDescription("Already registered");
+      if (profile) {
+        const days = Math.round((Date.now() - profile.lastMatch.getTime()) / (24 * 60 * 60 * 1000));
+        let dayText = " ";
+        if (days === 0) dayText = "Today";
+        if (days === 1) dayText = "Yesterday";
+        if (days > 1) dayText = `${days} days ago`;
+        embed.setColor("LUMINOUS_VIVID_PINK");
+        embed.setTitle(profile.discordName);
+        embed.setThumbnail(profile.discordAvatar);
+        embed.setDescription(`\`\`\`ELO:    ${profile.elo}\nWins:   ${profile.wins}\nLosses: ${profile.losses}\`\`\``);
+        embed.setFooter(`Last match played: ${dayText}`);
         msg.channel.send(embed);
         return;
       }
 
-      await new Player({
-        discordId: playerId,
-        discordName: playerName,
-        discordAvatar: playerAvatar
-      }).save();
-
-      embed.setColor("GREEN");
-      embed.setDescription(`**Success**, registered ${playerName}`);
+      embed.setColor("BLUE");
+      embed.setDescription("Profile not found");
       msg.channel.send(embed);
 
     } catch {
@@ -107,23 +112,6 @@ const profile = async msg => {
       embed.setDescription("Database connection failed");
       msg.channel.send(embed);
     }
-  }
-  const embed = new Discord.RichEmbed();
-
-  try {
-    const profile = await Player.findOne({ discordId: discordid }).lean();
-    if (profile) {
-      embed.setColor("BLUE");
-      embed.setDescription("profile found");
-      return embed;
-    }
-    embed.setColor("RED");
-    embed.setDescription("profile not found");
-    return embed;
-  } catch {
-    embed.setColor("RED");
-    embed.setDescription("error");
-    return embed;
   }
 };
 

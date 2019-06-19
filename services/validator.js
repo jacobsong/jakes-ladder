@@ -67,7 +67,7 @@ const checkMember = (member) => {
     return null;
   } else {
     errors.setColor("RED");
-    errors.setDescription("Failed, not a crew member");
+    errors.setDescription("**Failed**, not a crew member");
     return errors;
   }
 };
@@ -79,7 +79,7 @@ const checkMod = (msg) => {
     return null;
   } else {
     errors.setColor("RED");
-    errors.setDescription("Failed, you are not a mod");
+    errors.setDescription("**Failed**, you are not a mod");
     return errors;
   }
 };
