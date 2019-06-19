@@ -65,7 +65,7 @@ const register = async (msg) => {
 
     } catch {
       embed.setColor("RED");
-      embed.setDescription("Database connection failed");
+      embed.setDescription("Database error");
       msg.channel.send(embed);
     }
   }
@@ -109,27 +109,36 @@ const profile = async msg => {
 
     } catch {
       embed.setColor("RED");
-      embed.setDescription("Database connection failed");
+      embed.setDescription("Database error");
       msg.channel.send(embed);
     }
   }
 };
 
-const leaderboard = async () => {
-  const arr = ["A | MB | FoFo", "matt", "alex"];
-  let board = "```";
+const leaderboard = async (msg) => {
+  const errors = validator.checkMod(msg);
+  if (errors) { msg.channel.send(errors); return; }
 
-  for (let index = 0; index < arr.length; index++) {
-    board += `#${index + 1} - ELO: 1000 ${arr[index]}\n`;
+  const embed = new Discord.RichEmbed();
+
+  try {
+    const players = await Player.find({}).select("elo discordName").sort({ elo: -1 }).lean();
+
+    let board = "```";
+    for (let index = 0; index < players.length; index++) {
+      board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName}\n`;
+    }
+    board += "```";
+
+    embed.setTitle("Big Dick Playas");
+    embed.setColor("GOLD");
+    embed.setDescription(board);
+    msg.channel.send(embed);
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("Database error");
+    msg.channel.send(embed);
   }
-  board += "```";
-
-  const embed = new Discord.RichEmbed()
-    .setTitle("Big Dick Playas")
-    .setColor("GOLD")
-    .setDescription(board);
-
-  return embed;
 }
 
 const reset = async (msg) => {

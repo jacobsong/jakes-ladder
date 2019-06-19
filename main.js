@@ -35,7 +35,7 @@ client.on("message", async message => {
   }
 
   if (message.content.startsWith(`${prefix}profile`)) {
-    await commands.profile(message)
+    await commands.profile(message);
   }
 
   if (message.channel.name === "leaderboard") {
@@ -45,7 +45,7 @@ client.on("message", async message => {
     }
 
     if (message.content === `${prefix}leaderboard`) {
-      await commands.leaderboard()
+      await commands.leaderboard(message);
     }
 
     if (message.content.startsWith(`${prefix}reset`)) {
