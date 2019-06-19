@@ -18,7 +18,7 @@ const help = (msg) => {
       ["- Records a match between 2 players", "- Example: \`=record @vizi 3 @sack 1\`"]);
 
   msg.channel.send(embed);
-}
+};
 
 const register = async (msg) => {
   if (validator.isCommand(msg)) {
@@ -69,7 +69,7 @@ const register = async (msg) => {
       msg.channel.send(embed);
     }
   }
-}
+};
 
 const profile = async msg => {
   if (validator.isCommand(msg)) {
@@ -139,39 +139,77 @@ const leaderboard = async (msg) => {
     embed.setDescription("Database error");
     msg.channel.send(embed);
   }
-}
+};
 
 const reset = async (msg) => {
-  const embed = new Discord.RichEmbed();
-  return embed
-}
+  if (validator.isCommand(msg)) {
+    const playerId = msg.mentions.users.first().id;
+    const playerName = msg.mentions.users.first().username;
+    const playerMember = msg.mentions.members.first();
+    const result = validator.checkArgs(msg);
+    if (result.errors) { msg.channel.send(result.errors); return; }
+    if (result.numArgs === 0) {
+      const missing = new Discord.RichEmbed()
+        .setColor("RED")
+        .setDescription("**Error**: You must mention a user with @");
+      msg.channel.send(missing);
+      return;
+    }
+    if (result.numArgs > 0) {
+      const modErrors = validator.checkMod(msg);
+      if (modErrors) { msg.channel.send(modErrors); return; }
+
+      const memberErrors = validator.checkMember(playerMember);
+      if (memberErrors) { msg.channel.send(memberErrors); return; }
+
+      const embed = new Discord.RichEmbed();
+
+      try {
+        const result = await Player.updateOne({ discordId: playerId }, { $set: { elo: 1000, wins: 0, losses: 0 } });
+        if (result.n == 1) {
+          embed.setColor("GREEN");
+          embed.setDescription(`**Success**, stats have been reset for ${playerName}`);
+          msg.channel.send(embed);
+          return;
+        }
+        embed.setColor("BLUE");
+        embed.setDescription("Player not found");
+        msg.channel.send(embed);
+        return;
+      } catch {
+        embed.setColor("RED");
+        embed.setDescription("Database error");
+        msg.channel.send(embed);
+      }
+    }
+  }
+};
 
 const resetboard = async (msg) => {
+  const modErrors = validator.checkMod(msg);
+  if (modErrors) { msg.channel.send(modErrors); return; }
   const embed = new Discord.RichEmbed();
-  return embed
-}
+
+  try {
+    await Player.deleteMany({});
+    embed.setColor("GREEN");
+    embed.setDescription("**Success**, leaderboard has been reset");
+    msg.channel.send(embed);
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("Database error");
+    msg.channel.send(embed);
+  }
+};
 
 const decay = async (msg) => {
   const embed = new Discord.RichEmbed();
   return embed
-}
+};
 
 const record = async (msg) => {
   const embed = new Discord.RichEmbed();
   return embed
-}
-
-const changeHandle = async (id, handle) => {
-  try {
-    const result = await User.updateOne({ _id: id }, { $set: { handle: handle, hasProfile: true } });
-    if (result.n == 1) {
-      return null;
-    } else {
-      return { error: "ID not found" };
-    }
-  } catch {
-    return { error: "Database update failed" };
-  }
 };
 
 module.exports = {
