@@ -30,18 +30,18 @@ client.on("userUpdate", async (oldUser, newUser) => {
 });
 
 client.on("message", async message => {
-  if (message.content.startsWith(`${prefix}profile`)) {
-    await commands.profile(message)
-  }
-
   if (message.content.startsWith(`${prefix}register`)) {
     await commands.register(message);
+  }
+
+  if (message.content.startsWith(`${prefix}profile`)) {
+    await commands.profile(message)
   }
 
   if (message.channel.name === "leaderboard") {
 
     if (message.content === `${prefix}help`) {
-      commands.help();
+      commands.help(message);
     }
 
     if (message.content === `${prefix}leaderboard`) {

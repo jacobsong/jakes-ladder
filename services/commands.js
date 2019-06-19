@@ -1,12 +1,8 @@
 const Discord = require("discord.js");
 const Player = require("../models/Player");
-const validMember = "Villains";
-const validMod = "Super Villians";
-const prefix = "=";
+const validator = require("./validator");
 
-//message.member.roles.some((role) => role.name === "Lord");
-
-const help = () => {
+const help = (msg) => {
   const embed = new Discord.RichEmbed()
     .setTitle("Command List")
     .setColor("BLUE")
@@ -21,38 +17,97 @@ const help = () => {
     .addField("**record** *<user>* *<games-won>* *<user>* *<games-won>*",
       ["- Records a match between 2 players", "- Example: \`=record @vizi 3 @sack 1\`"]);
 
-  return embed;
+  msg.channel.send(embed);
 }
 
 const register = async (msg) => {
-  const msgArr = msg.content.split(" ");
-  if (msgArr[0] === `${prefix}register`) {
+  if (validator.isCommand(msg)) {
+    let playerId = msg.author.id;
+    let playerName = msg.author.username;
+    let playerAvatar = msg.author.avatarURL;
+
+    const result = validator.checkArgs(msg);
+    if (result.errors) { msg.channel.send(result.errors); return; }
+    if (result.numArgs > 0) {
+      let errors = validator.checkMod(msg);
+      if (errors) { msg.channel.send(errors); return; }
+      errors = validator.checkMember(msg.mentions.members.first());
+      if (errors) { msg.channel.send(errors); return; }
+      playerId = msg.mentions.users.first().id;
+      playerName = msg.mentions.users.first().username;
+      playerAvatar = msg.mentions.users.first().avatarURL;
+    }
+
     const embed = new Discord.RichEmbed();
-    embed.setColor("RED");
-    embed.setDescription("Too many arguments");
 
-    if (msgArr.length === 2) {
-      embed.setDescription("You must mention a user with @");
-      if (msg.mentions.members.size === 1) {
-        embed.setDescription("found 1 mentions");
-      }
-    }
+    try {
+      const existingPlayer = await Player.find({ discordId: playerId }).limit(1);
 
-    if (msgArr.length === 1) {
-      if (msg.member.roles.some(role => role.name === validMember)) {
+      if (existingPlayer.length) {
         embed.setColor("GREEN");
-        embed.setDescription(`Success, registered as ${msg.author.username}`);
-      } else {
-        embed.setColor("RED");
-        embed.setDescription("Failed, you are not a crew member");
+        embed.setDescription("Already registered");
+        msg.channel.send(embed);
+        return;
       }
-    }
 
-    msg.channel.send(embed);
+      await new Player({
+        discordId: playerId,
+        discordName: playerName,
+        discordAvatar: playerAvatar
+      }).save();
+
+      embed.setColor("GREEN");
+      embed.setDescription(`**Success**, registered ${playerName}`);
+      msg.channel.send(embed);
+
+    } catch {
+      embed.setColor("RED");
+      embed.setDescription("Database connection failed");
+      msg.channel.send(embed);
+    }
   }
 }
 
 const profile = async msg => {
+  if (validator.isCommand(msg)) {
+    let playerId = msg.author.id;
+
+    const result = validator.checkArgs(msg);
+    if (result.errors) { msg.channel.send(result.errors); return; }
+    if (result.numArgs > 0) {
+      errors = validator.checkMember(msg.mentions.members.first());
+      if (errors) { msg.channel.send(errors); return; }
+      playerId = msg.mentions.users.first().id;
+    }
+
+    const embed = new Discord.RichEmbed();
+
+    try {
+      const existingPlayer = await Player.find({ discordId: playerId }).limit(1);
+
+      if (existingPlayer.length) {
+        embed.setColor("GREEN");
+        embed.setDescription("Already registered");
+        msg.channel.send(embed);
+        return;
+      }
+
+      await new Player({
+        discordId: playerId,
+        discordName: playerName,
+        discordAvatar: playerAvatar
+      }).save();
+
+      embed.setColor("GREEN");
+      embed.setDescription(`**Success**, registered ${playerName}`);
+      msg.channel.send(embed);
+
+    } catch {
+      embed.setColor("RED");
+      embed.setDescription("Database connection failed");
+      msg.channel.send(embed);
+    }
+  }
   const embed = new Discord.RichEmbed();
 
   try {
