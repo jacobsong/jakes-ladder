@@ -30,7 +30,12 @@ client.on("userUpdate", async (oldUser, newUser) => {
   console.log(newUser);
 });
 
+// Respond to commands
 client.on("message", async message => {
+  if (message.content === `${prefix}help`) {
+    commands.help(message);
+  }
+
   if (message.content.startsWith(`${prefix}register`)) {
     await commands.register(message);
   }
@@ -40,11 +45,6 @@ client.on("message", async message => {
   }
 
   if (message.channel.name === "leaderboard") {
-
-    if (message.content === `${prefix}help`) {
-      commands.help(message);
-    }
-
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);
     }
@@ -67,4 +67,5 @@ client.on("message", async message => {
   }
 });
 
+// Login with bot token
 client.login(config.token);
