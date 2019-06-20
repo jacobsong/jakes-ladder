@@ -239,8 +239,47 @@ const decay = async (msg) => {
 };
 
 const record = async (msg) => {
-  const embed = new Discord.RichEmbed();
-  return embed
+  if (validator.isCommand(msg)) {
+    const modErrors = validator.checkMod(msg);
+    if (modErrors) { msg.channel.send(modErrors); return; }
+
+    const argErrors = validator.checkRecordArgs(msg);
+    if (argErrors) { msg.channel.send(argErrors); return; }
+
+    const embed = new Discord.RichEmbed();
+
+    msg.channel.send("success");
+    // check if the mentioned players are registered
+    // check the mnetioned players are not the same player
+    // try {
+    //   const result1 = await Player.updateOne({ discordId: playerOneId });
+    //   const result2 = await Player.updateOne({ discordId: playerOneId });
+
+    //   if (players.length > 0) {
+    //     let decayList = "```";
+    //     await players.forEach((player) => {
+    //       let oldELO = player.elo;
+    //       let newELO = Math.round(player.elo * .95);
+    //       player.elo = newELO;
+    //       player.save();
+    //       decayList += `${oldELO} => ${newELO} - ${player.discordName}\n`;
+    //     });
+    //     decayList += "```";
+    //     embed.setTitle("These players had their ELO decay");
+    //     embed.setColor("GREEN");
+    //     embed.setDescription(decayList);
+    //     msg.channel.send(embed);
+    //     return;
+    //   }
+    //   embed.setColor("BLUE");
+    //   embed.setDescription("No players found to decay");
+    //   msg.channel.send(embed);
+    // } catch {
+    //   embed.setColor("RED");
+    //   embed.setDescription("Database error");
+    //   msg.channel.send(embed);
+    // }
+  }
 };
 
 module.exports = {

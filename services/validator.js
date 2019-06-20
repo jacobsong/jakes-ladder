@@ -38,25 +38,43 @@ const checkArgs = (msg) => {
 const checkRecordArgs = (msg) => {
   const msgArr = msg.content.split(" ");
   const errors = new Discord.RichEmbed();
+  const gamesWon1 = Number(msgArr[2]);
+  const gamesWon2 = Number(msgArr[4]);
 
-  if (msgArr.length - 1 > 1) {
+  if (msgArr.length - 1 != 4) {
     errors.setColor("RED");
-    errors.setDescription(`**Error**: expected **${numArgs}** parameter(s), received **${msgArr.length - 1}**`);
+    errors.setDescription(`**Error**: expected **4** parameters, received **${msgArr.length - 1}**`);
     return errors;
   }
-  if (msg.mentions.members.size != numMentions) {
+
+  if (msg.mentions.members.size != 2) {
     errors.setColor("RED");
-    errors.setDescription(`**Error**: expected **${numMentions}** mention(s), received **${msg.mentions.members.size}**`);
+    errors.setDescription(`**Error**: expected **2** mentions, received **${msg.mentions.members.size}**`);
     return errors;
-  } else {
-    return null;
   }
-  if (msg.mentions.members.size > numMentions) {
-    errors.setColor("RED");
-    errors.setDescription("**Error**: too many mentions");
+
+  if (isNaN(gamesWon1) || isNaN(gamesWon2)) {
+    errors.setColor("RED")
+    errors.setDescription(`**Error**: <games-won> should be a number`);
     return errors;
-  } else {
-    return null;
+  }
+
+  if (gamesWon1 > 3 || gamesWon1 < 0 || gamesWon2 > 3 || gamesWon2 < 0) {
+    errors.setColor("RED");
+    errors.setDescription("**Error**: <games-won> should be between 0 and 3");
+    return errors;
+  }
+
+  if ((gamesWon1 + gamesWon2) > 5) {
+    errors.setColor("RED");
+    errors.setDescription("**Error**: total games should be less than 5");
+    return errors;
+  }
+
+  if (gamesWon1 < 3 && gamesWon2 < 3) {
+    errors.setColor("RED");
+    errors.setDescription("**Error**: at least one player needs to win 3 games");
+    return errors;
   }
 };
 

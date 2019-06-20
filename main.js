@@ -22,6 +22,7 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true 
 );
 
 // Update usernames in DB when users change usernames
+// TODO check if member leaves
 client.on("userUpdate", async (oldUser, newUser) => {
   console.log("old: ");
   await console.log(oldUser);
