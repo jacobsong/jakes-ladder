@@ -10,6 +10,7 @@ const help = (msg) => {
     .addField("**register** *<user>*", "- Registers the mentioned user")
     .addField("**profile**", "- Returns stats for yourself")
     .addField("**profile** *<user>*", "- Returns stats for the mentioned user")
+    .addField("**ducknofades**", "- Shows what ELO scores you should challenge")
     .addField("**leaderboard**", "- Shows the leaderboard")
     .addField("**reset** *<user>*", "- Resets stats for the mentioned user")
     .addField("**resetboard**", "- Resets the leaderboard")
@@ -326,7 +327,7 @@ const calculateELO = (winnerELO, loserELO, winnerGames, loserGames) => {
   let winnerK = k;
   let loserK = k;
 
-  if (winnerProb > 0.4 && winnerProb < 0.6) {
+  if (winnerProb => 0.4 && winnerProb <= 0.6) {
     winnerK = k * 2;
     loserK = k / 2;
   }
@@ -337,10 +338,35 @@ const calculateELO = (winnerELO, loserELO, winnerGames, loserGames) => {
   return ({ winnerRating, loserRating });
 };
 
-const ducknofades = (msg) => {
+const ducknofades = async (msg) => {
+  const memberErrors = validator.checkMember(msg.member);
+  if (memberErrors) { msg.channel.send(memberErrors); return; }
+
   const embed = new Discord.RichEmbed();
-  embed.setTitle(" clapped :whew:");
-  msg.channel.send(embed);
+
+  try {
+    const player = await Player.findOne({ discordId: msg.author.id }).select("elo").lean();
+
+    if (!player) {
+      embed.setColor("RED");
+      embed.setDescription("You are not registered, stop ducking fades and register now");
+      msg.channel.send(embed);
+      return;
+    }
+
+    const upperBound = Math.round((Math.log10(((1 / 0.4) - 1)) * 400) + player.elo);
+    const lowerBound = Math.round((Math.log10(((1 / 0.6) - 1)) * 400) + player.elo);
+
+    embed.setColor([253, 117, 139]);
+    embed.setTitle("Duck No Fades Bonus");
+    embed.setDescription("When you fight other players around the same ELO as you, you will get a boost.\nIf you win, you will earn more points than normal.\nIf you lose, you will lose less points than normal");
+    embed.addField("For you, you should fight players with:", `\`\`\`ELO: ${lowerBound} - ${upperBound}\`\`\``);
+    msg.channel.send(embed);
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("Database error");
+    msg.channel.send(embed);
+  }
 };
 
 module.exports = {
