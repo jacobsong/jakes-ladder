@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const playerSchema = new Schema(
   {
-    discordId: String,
+    discordId: { type: String, unique: true, index: true },
     discordName: String,
     discordAvatar: String,
     lastMatch: { type: Date, default: Date.now },
