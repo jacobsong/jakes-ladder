@@ -1,7 +1,7 @@
 {
   "name": "jakes-ladder",
   "version": "1.0.0",
-  "description": "ELO ladder system for fighting games",
+  "description": "ELO ladder system for 1v1 games Bo5",
   "main": "main.js",
   "scripts": {
     "start": "node main.js",
