@@ -247,39 +247,100 @@ const record = async (msg) => {
     if (argErrors) { msg.channel.send(argErrors); return; }
 
     const embed = new Discord.RichEmbed();
+    const msgArr = msg.content.split(" ");
+    const firstId = msgArr[1].replace(/[<@>]/g, "");
+    const secondId = msgArr[3].replace(/[<@>]/g, "");
 
-    msg.channel.send("success");
-    // check if the mentioned players are registered
-    // check the mnetioned players are not the same player
-    // try {
-    //   const result1 = await Player.updateOne({ discordId: playerOneId });
-    //   const result2 = await Player.updateOne({ discordId: playerOneId });
+    try {
+      const firstExists = await Player.find({ discordId: firstId }).limit(1);
+      const secondExists = await Player.find({ discordId: secondId }).limit(1);
 
-    //   if (players.length > 0) {
-    //     let decayList = "```";
-    //     await players.forEach((player) => {
-    //       let oldELO = player.elo;
-    //       let newELO = Math.round(player.elo * .95);
-    //       player.elo = newELO;
-    //       player.save();
-    //       decayList += `${oldELO} => ${newELO} - ${player.discordName}\n`;
-    //     });
-    //     decayList += "```";
-    //     embed.setTitle("These players had their ELO decay");
-    //     embed.setColor("GREEN");
-    //     embed.setDescription(decayList);
-    //     msg.channel.send(embed);
-    //     return;
-    //   }
-    //   embed.setColor("BLUE");
-    //   embed.setDescription("No players found to decay");
-    //   msg.channel.send(embed);
-    // } catch {
-    //   embed.setColor("RED");
-    //   embed.setDescription("Database error");
-    //   msg.channel.send(embed);
-    // }
+      if (firstExists.length === 0) {
+        embed.setColor("RED");
+        embed.setDescription(`${msgArr[1]} is not registered`);
+        msg.channel.send(embed);
+        return;
+      }
+
+      if (secondExists.length === 0) {
+        embed.setColor("RED");
+        embed.setDescription(`${msgArr[3]} is not registered`);
+        msg.channel.send(embed);
+        return;
+      }
+
+      const firstGames = Number(msgArr[2]);
+      const secondGames = Number(msgArr[4]);
+      let winnerId;
+      let loserId;
+      let winnerGames;
+      let loserGames;
+
+      if (firstGames > secondGames) {
+        winnerId = firstId;
+        winnerGames = firstGames;
+        loserId = secondId;
+        loserGames = secondGames;
+      } else {
+        winnerId = secondId;
+        winnerGames = secondGames;
+        loserId = firstId;
+        loserGames = firstGames;
+      }
+
+      const winner = await Player.findOne({ discordId: winnerId }).select("discordId discordName wins elo lastMatch");
+      const loser = await Player.findOne({ discordId: loserId }).select("discordId discordName losses elo lastMatch");
+      const newELOs = calculateELO(winner.elo, loser.elo, winnerGames, loserGames);
+
+      const winnerOldELO = winner.elo;
+      const loserOldELO = loser.elo;
+
+      winner.wins += 1;
+      winner.elo = newELOs.winnerRating;
+      winner.lastMatch = Date.now();
+      loser.losses += 1;
+      loser.elo = newELOs.loserRating;
+      loser.lastMatch = Date.now();
+
+      await winner.save();
+      await loser.save();
+
+      embed.setColor("AQUA");
+      embed.setTitle(`${loser.discordName}  got clapped`);
+      embed.setThumbnail("https://cdn.discordapp.com/emojis/590002598338363423.png?v=1");
+      embed.addField(`${winner.discordName}`, `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating}\`\`\``);
+      embed.addField(`${loser.discordName}`, `\`\`\`ELO:  ${loserOldELO} => ${newELOs.loserRating}\`\`\``);
+      msg.channel.send(embed);
+    } catch {
+      embed.setColor("RED");
+      embed.setDescription("Database error");
+      msg.channel.send(embed);
+    }
   }
+};
+
+const calculateELO = (winnerELO, loserELO, winnerGames, loserGames) => {
+  const k = 20 * (winnerGames - loserGames);
+  const winnerProb = (1.0 / (1.0 + Math.pow(10, ((loserELO - winnerELO) / 400))));
+  const loserProb = (1.0 / (1.0 + Math.pow(10, ((winnerELO - loserELO) / 400))));
+  let winnerK = k;
+  let loserK = k;
+
+  if (winnerProb > 0.4 && winnerProb < 0.6) {
+    winnerK = k * 2;
+    loserK = k / 2;
+  }
+
+  const winnerRating = Math.round(winnerELO + winnerK * (1 - winnerProb));
+  const loserRating = Math.round(loserELO + loserK * (0 - loserProb));
+
+  return ({ winnerRating, loserRating });
+};
+
+const ducknofades = (msg) => {
+  const embed = new Discord.RichEmbed();
+  embed.setTitle(" clapped :whew:");
+  msg.channel.send(embed);
 };
 
 module.exports = {
@@ -290,5 +351,6 @@ module.exports = {
   reset,
   resetboard,
   decay,
-  record
+  record,
+  ducknofades
 };

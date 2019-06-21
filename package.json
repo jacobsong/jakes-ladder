@@ -1,12 +1,13 @@
 {
   "name": "jakes-ladder",
   "version": "1.0.0",
-  "description": "",
+  "description": "ELO ladder system for fighting games",
   "main": "main.js",
   "scripts": {
+    "start": "node main.js",
     "dev": "nodemon main.js"
   },
-  "author": "",
+  "author": "Jake S.",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^11.5.1",

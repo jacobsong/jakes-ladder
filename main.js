@@ -44,6 +44,10 @@ client.on("message", async message => {
     await commands.profile(message);
   }
 
+  if (message.content === (`${prefix}ducknofades`)) {
+    await commands.ducknofades(message);
+  }
+
   if (message.channel.name === "leaderboard") {
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);
