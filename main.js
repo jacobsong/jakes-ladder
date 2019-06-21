@@ -1,8 +1,9 @@
 const Discord = require("discord.js");
 const mongoose = require("mongoose");
+const Player = require("./models/Player");
 const config = require("./config/config");
 const commands = require("./services/commands");
-const client = new Discord.Client();
+const client = new Discord.Client({ disabledEvents: ["TYPING_START"] });
 const prefix = "=";
 
 // Verify connected and set presence
@@ -21,13 +22,24 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true 
   }
 );
 
-// Update usernames in DB when users change usernames
-// TODO check if member leaves
+// Update DB when users change usernames
 client.on("userUpdate", async (oldUser, newUser) => {
-  console.log("old: ");
-  await console.log(oldUser);
-  console.log("new: ");
-  console.log(newUser);
+  try {
+    await Player.updateOne({ discordId: oldUser.id },
+      { $set: { discordName: newUser.username, discordAvatar: newUser.avatarURL } }
+    );
+  } catch {
+    console.log("Error updating user's discordName/avatar");
+  }
+});
+
+// Update DB when members leave
+client.on('guildMemberRemove', async member => {
+  try {
+    await Player.deleteOne({ discordId: member.id })
+  } catch {
+    console.log("Error deleting guild member");
+  }
 });
 
 // Respond to commands
