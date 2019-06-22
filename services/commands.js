@@ -249,8 +249,8 @@ const record = async (msg) => {
 
     const embed = new Discord.RichEmbed();
     const msgArr = msg.content.split(" ");
-    const firstId = msgArr[1].replace(/[<@>]/g, "");
-    const secondId = msgArr[3].replace(/[<@>]/g, "");
+    const firstId = msgArr[1].replace(/[<@!>]/g, "");
+    const secondId = msgArr[3].replace(/[<@!>]/g, "");
 
     try {
       const firstExists = await Player.find({ discordId: firstId }).limit(1);
