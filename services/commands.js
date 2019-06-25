@@ -127,11 +127,11 @@ const leaderboard = async (msg) => {
 
     let board = "```";
     for (let index = 0; index < players.length; index++) {
-      board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName}\n`;
+      board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 15)}\n`;
     }
     board += "```";
 
-    embed.setTitle("Big Dick Playas");
+    embed.setTitle("Big Dick Players");
     embed.setColor("GOLD");
     embed.setDescription(board);
     msg.channel.send(embed);
@@ -309,6 +309,7 @@ const record = async (msg) => {
       embed.setColor("AQUA");
       embed.setTitle(`${loser.discordName}  got clapped`);
       embed.setThumbnail("https://cdn.discordapp.com/emojis/590002598338363423.png?v=1");
+      embed.setDescription(`\n${winner.discordName}: ${winnerGames}\n${loser.discordName}: ${loserGames}`);
       embed.addField(`${winner.discordName}`, `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating}\`\`\``);
       embed.addField(`${loser.discordName}`, `\`\`\`ELO:  ${loserOldELO} => ${newELOs.loserRating}\`\`\``);
       msg.channel.send(embed);

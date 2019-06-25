@@ -46,42 +46,55 @@ client.on('guildMemberRemove', async member => {
 client.on("message", async message => {
   if (message.content === `${prefix}help`) {
     commands.help(message);
+    message.delete();
   }
 
   if (message.content.startsWith(`${prefix}register`)) {
     await commands.register(message);
+    message.delete();
   }
 
   if (message.content.startsWith(`${prefix}profile`)) {
     await commands.profile(message);
+    message.delete();
   }
 
   if (message.content === (`${prefix}ducknofades`)) {
     await commands.ducknofades(message);
+    message.delete();
   }
 
   if (message.channel.name === "leaderboard") {
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);
+      message.delete();
     }
 
     if (message.content.startsWith(`${prefix}reset`)) {
       await commands.reset(message);
+      message.delete();
     }
 
     if (message.content === `${prefix}resetboard`) {
       await commands.resetboard(message);
+      message.delete();
     }
 
     if (message.content === `${prefix}decay`) {
       await commands.decay(message);
+      message.delete();
     }
 
     if (message.content.startsWith(`${prefix}record`)) {
       await commands.record(message);
+      message.delete();
     }
   }
 });
 
 // Login with bot token
-client.login(config.token);
+try {
+  client.login(config.token);
+} catch {
+  console.log("Failed to login to Discord");
+}
