@@ -127,7 +127,7 @@ const leaderboard = async (msg) => {
 
     let board = "```";
     for (let index = 0; index < players.length; index++) {
-      board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 15)}\n`;
+      board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 14)}\n`;
     }
     board += "```";
 
