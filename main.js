@@ -80,6 +80,11 @@ client.on("message", async message => {
       message.delete(1500);
     }
 
+    if (message.content === `${prefix}deleteboard`) {
+      await commands.deleteboard(message);
+      message.delete(1500);
+    }
+
     if (message.content === `${prefix}decay`) {
       await commands.decay(message);
       message.delete(1500);

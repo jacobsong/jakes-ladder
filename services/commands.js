@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Player = require("../models/Player");
+const System = require('../models/System');
 const validator = require("./validator");
 
 const help = (msg) => {
@@ -14,6 +15,7 @@ const help = (msg) => {
     .addField("**leaderboard**", "- Shows the leaderboard")
     .addField("**reset** *<user>*", "- Resets stats for the mentioned user")
     .addField("**resetboard**", "- Resets the leaderboard")
+    .addField("**deleteboard**", "- Deletes the leaderboard")
     .addField("**decay**", "- Decays ELO for players that have not played a match in 7 days")
     .addField("**record** *<user>* *<games-won>* *<user>* *<games-won>*",
       ["- Records a match between 2 players", "- Example: \`=record @vizi 3 @sack 1\`"]);
@@ -124,6 +126,7 @@ const leaderboard = async (msg) => {
 
   try {
     const players = await Player.find({}).select("elo discordName").sort({ elo: -1 }).lean();
+    const oldLeaderBoardId = await System.findOne({ paramName: "oldLeaderBoardId" });
 
     let board = "```";
     for (let index = 0; index < players.length; index++) {
@@ -134,7 +137,15 @@ const leaderboard = async (msg) => {
     embed.setTitle("Big Dick Players");
     embed.setColor("GOLD");
     embed.setDescription(board);
-    msg.channel.send(embed);
+    const sentLeaderBoard = await msg.channel.send(embed);
+    if (oldLeaderBoardId === null) {
+      new System({ paramName: "oldLeaderBoardId", paramValue: sentLeaderBoard.id }).save();
+    } else if (oldLeaderBoardId.paramValue != null) {
+      const oldMsg = await msg.channel.fetchMessage(oldLeaderBoardId.paramValue);
+      oldMsg.delete();
+      oldLeaderBoardId.paramValue = sentLeaderBoard.id
+      oldLeaderBoardId.save();
+    }
   } catch {
     embed.setColor("RED");
     embed.setDescription("Database error");
@@ -192,9 +203,26 @@ const resetboard = async (msg) => {
   const embed = new Discord.RichEmbed();
 
   try {
-    await Player.deleteMany({});
+    await Player.updateMany({}, { $set: { elo: 1000, wins: 0, losses: 0 } });
     embed.setColor("GREEN");
     embed.setDescription("**Success**, leaderboard has been reset");
+    msg.channel.send(embed);
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("Database error");
+    msg.channel.send(embed);
+  }
+};
+
+const deleteboard = async (msg) => {
+  const modErrors = validator.checkMod(msg);
+  if (modErrors) { msg.channel.send(modErrors); return; }
+  const embed = new Discord.RichEmbed();
+
+  try {
+    await Player.deleteMany({});
+    embed.setColor("GREEN");
+    embed.setDescription("**Success**, leaderboard has been deleted");
     msg.channel.send(embed);
   } catch {
     embed.setColor("RED");
@@ -377,6 +405,7 @@ module.exports = {
   leaderboard,
   reset,
   resetboard,
+  deleteboard,
   decay,
   record,
   ducknofades
