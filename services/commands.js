@@ -95,16 +95,14 @@ const profile = async msg => {
       if (profile) {
         const days = Math.round((Date.now() - profile.lastMatch.getTime()) / (24 * 60 * 60 * 1000));
         let dayText = " ";
-        let stats = `\`\`\`ELO:    ${profile.elo}\nWins:   ${profile.wins}\nLosses: ${profile.losses}`;
+        let stats = `\`\`\`ELO:    ${profile.elo}\nWins:   ${profile.wins}\nLosses: ${profile.losses}\nStreak: ${profile.streak || 0}\`\`\``;
 
         if (days === 0) dayText = "Today";
         if (days === 1) dayText = "Yesterday";
         if (days > 1) dayText = `${days} days ago`;
         if (profile.bounty) {
           embed.setAuthor(`⭐ Bounty ${profile.prize} ELO`);
-          stats += `\nStreak: ${profile.streak}`;
         }
-        stats += "\`\`\`";
 
         embed.setColor("LUMINOUS_VIVID_PINK");
         embed.setTitle(profile.discordName);
