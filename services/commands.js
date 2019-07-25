@@ -251,7 +251,7 @@ const decay = async (msg) => {
   try {
     const sevenDays = 7 * (24 * 60 * 60 * 1000);
     const lastWeek = new Date(Date.now() - sevenDays);
-    const players = await Player.find({ lastMatch: { $lte: lastWeek }, elo: { $gte: 1000 } }).select("discordName elo").sort({ elo: -1 });
+    const players = await Player.find({ lastMatch: { $lte: lastWeek }, elo: { $gte: 700 } }).select("discordName elo").sort({ elo: -1 });
 
     if (players.length > 0) {
       let decayList = "```";
