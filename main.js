@@ -64,6 +64,11 @@ client.on("message", async message => {
     message.delete(1500);
   }
 
+  if (message.content === (`${prefix}bounties`)) {
+    await commands.bounties(message);
+    message.delete(1500);
+  }
+
   if (message.channel.name === "leaderboard") {
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);

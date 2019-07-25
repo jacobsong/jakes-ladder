@@ -11,6 +11,7 @@ const help = (msg) => {
     .addField("**register** *<user>*", "- Registers the mentioned user")
     .addField("**profile**", "- Returns stats for yourself")
     .addField("**profile** *<user>*", "- Returns stats for the mentioned user")
+    .addField("**bounties**", "- Fetches a list of people with bounties")
     .addField("**ducknofades**", "- Shows what ELO scores you should challenge")
     .addField("**leaderboard**", "- Shows the leaderboard")
     .addField("**reset** *<user>*", "- Resets stats for the mentioned user")
@@ -94,13 +95,21 @@ const profile = async msg => {
       if (profile) {
         const days = Math.round((Date.now() - profile.lastMatch.getTime()) / (24 * 60 * 60 * 1000));
         let dayText = " ";
+        let stats = `\`\`\`ELO:    ${profile.elo}\nWins:   ${profile.wins}\nLosses: ${profile.losses}`;
+
         if (days === 0) dayText = "Today";
         if (days === 1) dayText = "Yesterday";
         if (days > 1) dayText = `${days} days ago`;
+        if (profile.bounty) {
+          embed.setAuthor(`⭐ Bounty ${profile.prize} ELO`);
+          stats += `\nStreak: ${profile.streak}`;
+        }
+        stats += "\`\`\`";
+
         embed.setColor("LUMINOUS_VIVID_PINK");
         embed.setTitle(profile.discordName);
         embed.setThumbnail(profile.discordAvatar);
-        embed.setDescription(`\`\`\`ELO:    ${profile.elo}\nWins:   ${profile.wins}\nLosses: ${profile.losses}\`\`\``);
+        embed.setDescription(stats);
         embed.setFooter(`Last match played: ${dayText}`);
         msg.channel.send(embed);
         return;
@@ -141,10 +150,15 @@ const leaderboard = async (msg) => {
     if (oldLeaderBoardId === null) {
       new System({ paramName: "oldLeaderBoardId", paramValue: sentLeaderBoard.id }).save();
     } else if (oldLeaderBoardId.paramValue != null) {
-      const oldMsg = await msg.channel.fetchMessage(oldLeaderBoardId.paramValue);
-      oldMsg.delete();
-      oldLeaderBoardId.paramValue = sentLeaderBoard.id
-      oldLeaderBoardId.save();
+      try {
+        const oldMsg = await msg.channel.fetchMessage(oldLeaderBoardId.paramValue);
+        oldMsg.delete();
+        oldLeaderBoardId.paramValue = sentLeaderBoard.id
+        oldLeaderBoardId.save();
+      } catch {
+        oldLeaderBoardId.paramValue = sentLeaderBoard.id
+        oldLeaderBoardId.save();
+      }
     }
   } catch {
     embed.setColor("RED");
@@ -317,8 +331,8 @@ const record = async (msg) => {
         loserGames = firstGames;
       }
 
-      const winner = await Player.findOne({ discordId: winnerId }).select("discordId discordName wins elo lastMatch");
-      const loser = await Player.findOne({ discordId: loserId }).select("discordId discordName losses elo lastMatch");
+      const winner = await Player.findOne({ discordId: winnerId }).select("discordId discordName wins elo lastMatch streak bounty prize");
+      const loser = await Player.findOne({ discordId: loserId }).select("discordId discordName losses elo lastMatch streak bounty prize");
       const newELOs = calculateELO(winner.elo, loser.elo, winnerGames, loserGames);
 
       const winnerOldELO = winner.elo;
@@ -331,17 +345,52 @@ const record = async (msg) => {
       loser.elo = newELOs.loserRating;
       loser.lastMatch = Date.now();
 
+      const winnerMember = await msg.guild.fetchMember(winnerId);
+      const loserMember = await msg.guild.fetchMember(loserId);
+      const bountyRole = msg.guild.roles.find(role => role.name === "Bounty");
+      let eloFieldMsg = "";
+
+      winner.streak += 1;
+      loser.streak = 0;
+
+      let footer = "";
+
+      if (winner.bounty) {
+        if (winner.prize < 50 && (winner.streak % 2 === 1)) {
+          winner.prize += 5;
+          footer += `💰 ${winner.discordName}'s bounty grows (${winner.prize} ELO)\n`;
+        }
+      }
+      else if (winner.streak === 3) {
+        winner.bounty = true;
+        winner.prize = 15;
+        footer += `💰 ${winner.discordName} now has a bounty (15 ELO)\n`;
+        await winnerMember.addRole(bountyRole.id);
+      }
+
+      if (loser.bounty) {
+        winner.elo += loser.prize;
+        loser.bounty = false;
+        await loserMember.removeRole(bountyRole.id);
+        footer += `💰 ${winner.discordName} has taken the bounty (${loser.prize} ELO)\n`;
+        eloFieldMsg = `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating} + ${loser.prize}\`\`\``;
+        loser.prize = 0;
+      } else {
+        eloFieldMsg = `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating}\`\`\``;
+      }
+
       await winner.save();
       await loser.save();
 
       embed.setColor("AQUA");
-      embed.setTitle(`${loser.discordName}  got clapped`);
+      embed.setDescription(`${winner.discordName} wins ${winnerGames}-${loserGames}`);
       embed.setThumbnail("https://cdn.discordapp.com/emojis/590002598338363423.png?v=1");
-      embed.setDescription(`\n${winner.discordName}: ${winnerGames}\n${loser.discordName}: ${loserGames}`);
-      embed.addField(`${winner.discordName}`, `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating}\`\`\``);
+      embed.addField(`${winner.discordName}`, eloFieldMsg);
       embed.addField(`${loser.discordName}`, `\`\`\`ELO:  ${loserOldELO} => ${newELOs.loserRating}\`\`\``);
+      embed.setFooter(footer);
       msg.channel.send(embed);
-    } catch {
+    } catch (e) {
+      console.log(e);
       embed.setColor("RED");
       embed.setDescription("Database error");
       msg.channel.send(embed);
@@ -356,9 +405,9 @@ const calculateELO = (winnerELO, loserELO, winnerGames, loserGames) => {
   let winnerK = k;
   let loserK = k;
 
-  if (winnerProb => 0.4 && winnerProb <= 0.6) {
-    winnerK = k * 2;
-    loserK = k / 2;
+  if (winnerProb >= 0.4 && winnerProb <= 0.6) {
+    winnerK = k * 1.5;
+    loserK = k / 1.5;
   }
 
   const winnerRating = Math.round(winnerELO + winnerK * (1 - winnerProb));
@@ -398,6 +447,29 @@ const ducknofades = async (msg) => {
   }
 };
 
+const bounties = async (msg) => {
+  const embed = new Discord.RichEmbed();
+
+  try {
+    const players = await Player.find({ bounty: true }).select("discordName discordAvatar streak bounty prize").sort({ prize: -1 }).lean();
+    if (players.length) {
+      embed.setTitle(":moneybag: :moneybag: :moneybag:")
+      embed.setColor("DARK_GOLD");
+      players.forEach(player => {
+        embed.addField(`${player.discordName}`, `\`\`\`Prize:  ${player.prize} ELO\nStreak: ${player.streak} Kills\`\`\``);
+      })
+    } else {
+      embed.setColor("DARK_GOLD");
+      embed.setDescription("No bounties");
+    }
+    msg.channel.send(embed);
+  } catch {
+    embed.setColor("RED");
+    embed.setDescription("Database error");
+    msg.channel.send(embed);
+  }
+};
+
 module.exports = {
   help,
   register,
@@ -408,5 +480,6 @@ module.exports = {
   deleteboard,
   decay,
   record,
-  ducknofades
+  ducknofades,
+  bounties
 };
