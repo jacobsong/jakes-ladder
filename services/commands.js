@@ -9,6 +9,7 @@ const help = (msg) => {
     .setColor("BLUE")
     .addField("**register**", "- Registers yourself")
     .addField("**register** *<user>*", "- Registers the mentioned user")
+    .addField("**unregister** *<userID>*", "- Unregisters the user ID")
     .addField("**profile**", "- Returns stats for yourself")
     .addField("**profile** *<user>*", "- Returns stats for the mentioned user")
     .addField("**bounties**", "- Fetches a list of people with bounties")
@@ -74,6 +75,42 @@ const register = async (msg) => {
     }
   }
 };
+
+const unregister = async (msg) => {
+  if (validator.isCommand(msg)) {
+    const modErrors = validator.checkMod(msg);
+    if (modErrors) { msg.channel.send(modErrors); return; }
+
+    const embed = new Discord.RichEmbed().setColor("RED");
+    const msgArr = msg.content.split(" ");
+
+    if (msgArr.length - 1 === 0) {
+      embed.setDescription("**Error**: Did not specify a user ID");
+      msg.channel.send(embed);
+      return;
+    }
+    if (msgArr.length - 1 > 1) {
+      embed.setDescription("**Error**: Too many parameters");
+      msg.channel.send(embed);
+      return;
+    }
+
+    try {
+      const result = await Player.deleteOne({ discordId: msgArr[1] });
+      if (result.deletedCount === 0) {
+        embed.setDescription("That User ID does not exist");
+        msg.channel.send(embed);
+        return;
+      }
+      embed.setColor("GREEN");
+      embed.setDescription("**Success**: Deleted user ID " + msgArr[1]);
+      msg.channel.send(embed);
+    } catch {
+      embed.setDescription("Database error");
+      msg.channel.send(embed);
+    }
+  }
+}
 
 const profile = async msg => {
   if (validator.isCommand(msg)) {
@@ -471,6 +508,7 @@ const bounties = async (msg) => {
 module.exports = {
   help,
   register,
+  unregister,
   profile,
   leaderboard,
   reset,

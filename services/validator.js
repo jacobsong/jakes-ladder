@@ -7,6 +7,7 @@ const isCommand = (msg) => {
   const msgArr = msg.content.split(" ");
   const cmds = [
     `${prefix}register`,
+    `${prefix}unregister`,
     `${prefix}profile`,
     `${prefix}reset`,
     `${prefix}record`

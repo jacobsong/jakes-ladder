@@ -54,6 +54,11 @@ client.on("message", async message => {
     message.delete(1500);
   }
 
+  if (message.content.startsWith(`${prefix}unregister`)) {
+    await commands.unregister(message);
+    message.delete(1500);
+  }
+
   if (message.content.startsWith(`${prefix}profile`)) {
     await commands.profile(message);
     message.delete(1500);
