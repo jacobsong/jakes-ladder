@@ -13,7 +13,7 @@ client.once("ready", () => {
 });
 
 // Connect to MongoDB Atlas
-mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true }).then(
+mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
   () => {
     console.log("MongoDB connected...\n");
   },
