@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const validMember = "Villains";
-const validMod = "Super Villians";
+const validMod = "Super Villains";
+const validStaff = "Staff";
 const prefix = "=";
 
 const isCommand = (msg) => {
@@ -94,7 +95,7 @@ const checkMember = (member) => {
 const checkMod = (msg) => {
   const errors = new Discord.RichEmbed();
 
-  if (msg.member.roles.some((role) => role.name === validMod)) {
+  if (msg.member.roles.some((role) => (role.name === validMod) || (role.name === validStaff))) {
     return null;
   } else {
     errors.setColor("RED");
