@@ -10,6 +10,7 @@ const isCommand = (msg) => {
     `${prefix}register`,
     `${prefix}unregister`,
     `${prefix}profile`,
+    `${prefix}status`,
     `${prefix}reset`,
     `${prefix}record`
   ];
