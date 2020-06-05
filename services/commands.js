@@ -210,7 +210,7 @@ const leaderboard = async (msg) => {
     }
     board += "```";
 
-    embed.setTitle("Big Dick Players");
+    embed.setTitle("Leaderboard");
     embed.setColor("GOLD");
     embed.setDescription(board);
     const sentLeaderBoard = await msg.channel.send(embed);
