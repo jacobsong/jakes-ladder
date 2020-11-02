@@ -217,7 +217,7 @@ const leaderboard = async (msg) => {
       new System({ paramName: "oldLeaderBoardId", paramValue: sentLeaderBoard.id }).save();
     } else if (oldLeaderBoardId.paramValue != null) {
       try {
-        const oldMsg = await msg.channel.fetchMessage(oldLeaderBoardId.paramValue);
+        const oldMsg = await msg.channel.messages.fetch(oldLeaderBoardId.paramValue);
         oldMsg.delete();
         oldLeaderBoardId.paramValue = sentLeaderBoard.id
         oldLeaderBoardId.save();
