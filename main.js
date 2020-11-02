@@ -93,7 +93,7 @@ client.on("message", async message => {
     message.delete({ timeout: 1500 });
   }
 
-  //if (message.channel.name === "leaderboard") {
+  if (message.channel.name === "leaderboard") {
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);
       message.delete({ timeout: 1500 });
@@ -123,7 +123,7 @@ client.on("message", async message => {
       await commands.record(message);
       message.delete({ timeout: 1500 });
     }
-  //}
+  }
 });
 
 // Login with bot token
