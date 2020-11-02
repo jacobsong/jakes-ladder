@@ -10,7 +10,7 @@
   "author": "Jake S.",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.5.1",
-    "mongoose": "^5.7.5"
+    "discord.js": "^12.4.1",
+    "mongoose": "^5.10.11"
   }
 }

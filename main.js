@@ -27,7 +27,7 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true,
 client.on("userUpdate", async (oldUser, newUser) => {
   try {
     await Player.updateOne({ discordId: oldUser.id },
-      { $set: { discordName: newUser.username, discordAvatar: newUser.avatarURL } }
+      { $set: { discordName: newUser.username, discordAvatar: newUser.avatarURL({ dynamic: true }) } }
     );
   } catch {
     console.log("Error updating user's discordName/avatar");
@@ -60,70 +60,70 @@ client.on("message", async message => {
 
   if (message.content === `${prefix}help`) {
     commands.help(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content.startsWith(`${prefix}register`)) {
     await commands.register(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content.startsWith(`${prefix}unregister`)) {
     await commands.unregister(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content.startsWith(`${prefix}profile`)) {
     await commands.profile(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content.startsWith(`${prefix}status`)) {
     await commands.status(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content === (`${prefix}ducknofades`)) {
     await commands.ducknofades(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
   if (message.content === (`${prefix}bounties`)) {
     await commands.bounties(message);
-    message.delete(1500);
+    message.delete({ timeout: 1500 });
   }
 
-  if (message.channel.name === "leaderboard") {
+  //if (message.channel.name === "leaderboard") {
     if (message.content === `${prefix}leaderboard`) {
       await commands.leaderboard(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
 
     if (message.content.startsWith(`${prefix}reset`)) {
       await commands.reset(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
 
     if (message.content === `${prefix}resetboard`) {
       await commands.resetboard(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
 
     if (message.content === `${prefix}deleteboard`) {
       await commands.deleteboard(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
 
     if (message.content === `${prefix}decay`) {
       await commands.decay(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
 
     if (message.content.startsWith(`${prefix}record`)) {
       await commands.record(message);
-      message.delete(1500);
+      message.delete({ timeout: 1500 });
     }
-  }
+  //}
 });
 
 // Login with bot token

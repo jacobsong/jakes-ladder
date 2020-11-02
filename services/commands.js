@@ -5,7 +5,7 @@ const System = require('../models/System');
 const validator = require("./validator");
 
 const help = (msg) => {
-  const embed = new Discord.RichEmbed()
+  const embed = new Discord.MessageEmbed()
     .setTitle("Command List")
     .setColor("BLUE")
     .addField("**status**", "- Check a user's activity status")
@@ -31,7 +31,6 @@ const register = async (msg) => {
   if (validator.isCommand(msg)) {
     let playerId = msg.author.id;
     let playerName = msg.author.username;
-    let playerAvatar = msg.author.avatarURL;
     let playerMember = msg.member;
 
     const result = validator.checkArgs(msg);
@@ -41,14 +40,13 @@ const register = async (msg) => {
       if (errors) { msg.channel.send(errors); return; }
       playerId = msg.mentions.users.first().id;
       playerName = msg.mentions.users.first().username;
-      playerAvatar = msg.mentions.users.first().avatarURL;
       playerMember = msg.mentions.members.first();
     }
 
     const memberErrors = validator.checkMember(playerMember);
     if (memberErrors) { msg.channel.send(memberErrors); return; }
 
-    const embed = new Discord.RichEmbed();
+    const embed = new Discord.MessageEmbed();
 
     try {
       const existingPlayer = await Player.find({ discordId: playerId }).limit(1);
@@ -62,8 +60,7 @@ const register = async (msg) => {
 
       await new Player({
         discordId: playerId,
-        discordName: playerName,
-        discordAvatar: playerAvatar
+        discordName: playerName
       }).save();
 
       embed.setColor("GREEN");
@@ -83,7 +80,7 @@ const unregister = async (msg) => {
     const modErrors = validator.checkMod(msg);
     if (modErrors) { msg.channel.send(modErrors); return; }
 
-    const embed = new Discord.RichEmbed().setColor("RED");
+    const embed = new Discord.MessageEmbed().setColor("RED");
     const msgArr = msg.content.split(" ");
 
     if (msgArr.length - 1 === 0) {
@@ -117,6 +114,7 @@ const unregister = async (msg) => {
 const profile = async msg => {
   if (validator.isCommand(msg)) {
     let playerId = msg.author.id;
+    let playerAvatar = msg.author.avatarURL({ dynamic: true });
 
     const result = validator.checkArgs(msg);
     if (result.errors) { msg.channel.send(result.errors); return; }
@@ -124,9 +122,10 @@ const profile = async msg => {
       errors = validator.checkMember(msg.mentions.members.first());
       if (errors) { msg.channel.send(errors); return; }
       playerId = msg.mentions.users.first().id;
+      playerAvatar = msg.mentions.users.first().avatarURL({ dynamic: true });
     }
 
-    const embed = new Discord.RichEmbed();
+    const embed = new Discord.MessageEmbed();
 
     try {
       const profile = await Player.findOne({ discordId: playerId }).lean();
@@ -145,7 +144,7 @@ const profile = async msg => {
 
         embed.setColor("LUMINOUS_VIVID_PINK");
         embed.setTitle(profile.discordName);
-        embed.setThumbnail(profile.discordAvatar);
+        embed.setThumbnail(playerAvatar);
         embed.setDescription(stats);
         embed.setFooter(`Last match played: ${dayText}`);
         msg.channel.send(embed);
@@ -166,7 +165,7 @@ const profile = async msg => {
 
 const status = async (msg, client) => {
   if (validator.isCommand(msg)) {
-    const embed = new Discord.RichEmbed();
+    const embed = new Discord.MessageEmbed();
     const result = validator.checkArgs(msg);
     if (result.errors) { msg.channel.send(result.errors); return; }
     if (result.numArgs > 0) {
@@ -174,7 +173,7 @@ const status = async (msg, client) => {
       embed.setColor("PURPLE")
         .setTitle(`:notepad_spiral: ${user.username}'s Activity Report`)
         .setDescription(`Due to Discord's limitations of not allowing bots to use the search bar, I have decided to awaken my Sharingan and log everyone's chat history starting \`1-14-2020\``)
-        .setThumbnail(user.avatarURL)
+        .setThumbnail(user.avatarURL({ dynamic: true }))
       const result = await Message.findOne({ discordId: user.id }).lean();
       if (result) {
           embed.addField("Last Message", result.lastMessage, true)
@@ -198,7 +197,7 @@ const leaderboard = async (msg) => {
   const errors = validator.checkMod(msg);
   if (errors) { msg.channel.send(errors); return; }
 
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
     const players = await Player.find({}).select("elo discordName").sort({ elo: -1 }).lean();
@@ -242,7 +241,7 @@ const reset = async (msg) => {
     const result = validator.checkArgs(msg);
     if (result.errors) { msg.channel.send(result.errors); return; }
     if (result.numArgs === 0) {
-      const missing = new Discord.RichEmbed()
+      const missing = new Discord.MessageEmbed()
         .setColor("RED")
         .setDescription("**Error**: You must mention a user with @");
       msg.channel.send(missing);
@@ -255,7 +254,7 @@ const reset = async (msg) => {
       const memberErrors = validator.checkMember(playerMember);
       if (memberErrors) { msg.channel.send(memberErrors); return; }
 
-      const embed = new Discord.RichEmbed();
+      const embed = new Discord.MessageEmbed();
 
       try {
         const result = await Player.updateOne({ discordId: playerId }, { $set: { elo: 1000, wins: 0, losses: 0 } });
@@ -281,7 +280,7 @@ const reset = async (msg) => {
 const resetboard = async (msg) => {
   const modErrors = validator.checkMod(msg);
   if (modErrors) { msg.channel.send(modErrors); return; }
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
     await Player.updateMany({}, { $set: { elo: 1000, wins: 0, losses: 0 } });
@@ -298,7 +297,7 @@ const resetboard = async (msg) => {
 const deleteboard = async (msg) => {
   const modErrors = validator.checkMod(msg);
   if (modErrors) { msg.channel.send(modErrors); return; }
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
     await Player.deleteMany({});
@@ -315,7 +314,7 @@ const deleteboard = async (msg) => {
 const decay = async (msg) => {
   const modErrors = validator.checkMod(msg);
   if (modErrors) { msg.channel.send(modErrors); return; }
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
     const sevenDays = 7 * (24 * 60 * 60 * 1000);
@@ -356,7 +355,7 @@ const record = async (msg) => {
     const argErrors = validator.checkRecordArgs(msg);
     if (argErrors) { msg.channel.send(argErrors); return; }
 
-    const embed = new Discord.RichEmbed();
+    const embed = new Discord.MessageEmbed();
     const msgArr = msg.content.split(" ");
     const firstId = msgArr[1].replace(/[<@!>]/g, "");
     const secondId = msgArr[3].replace(/[<@!>]/g, "");
@@ -412,9 +411,9 @@ const record = async (msg) => {
       loser.elo = newELOs.loserRating;
       loser.lastMatch = Date.now();
 
-      const winnerMember = await msg.guild.fetchMember(winnerId);
-      const loserMember = await msg.guild.fetchMember(loserId);
-      const bountyRole = msg.guild.roles.find(role => role.name === "Bounty");
+      const winnerMember = await msg.guild.members.fetch(winnerId);
+      const loserMember = await msg.guild.members.fetch(loserId);
+      const bountyRole = msg.guild.roles.cache.find(role => role.name === "Bounty");
       let eloFieldMsg = "";
 
       winner.streak += 1;
@@ -432,13 +431,13 @@ const record = async (msg) => {
         winner.bounty = true;
         winner.prize = 15;
         footer += `💰 ${winner.discordName} now has a bounty (15 ELO)\n`;
-        await winnerMember.addRole(bountyRole.id);
+        await winnerMember.roles.add(bountyRole);
       }
 
       if (loser.bounty) {
         winner.elo += loser.prize;
         loser.bounty = false;
-        await loserMember.removeRole(bountyRole.id);
+        await loserMember.roles.remove(bountyRole);
         footer += `💰 ${winner.discordName} has taken the bounty (${loser.prize} ELO)\n`;
         eloFieldMsg = `\`\`\`ELO:  ${winnerOldELO} => ${newELOs.winnerRating} + ${loser.prize}\`\`\``;
         loser.prize = 0;
@@ -487,7 +486,7 @@ const ducknofades = async (msg) => {
   const memberErrors = validator.checkMember(msg.member);
   if (memberErrors) { msg.channel.send(memberErrors); return; }
 
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
     const player = await Player.findOne({ discordId: msg.author.id }).select("elo").lean();
@@ -515,10 +514,10 @@ const ducknofades = async (msg) => {
 };
 
 const bounties = async (msg) => {
-  const embed = new Discord.RichEmbed();
+  const embed = new Discord.MessageEmbed();
 
   try {
-    const players = await Player.find({ bounty: true }).select("discordName discordAvatar streak bounty prize").sort({ prize: -1 }).lean();
+    const players = await Player.find({ bounty: true }).select("discordName streak bounty prize").sort({ prize: -1 }).lean();
     if (players.length) {
       embed.setTitle(":moneybag: :moneybag: :moneybag:")
       embed.setColor("DARK_GOLD");

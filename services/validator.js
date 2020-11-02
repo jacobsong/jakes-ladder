@@ -23,13 +23,13 @@ const checkArgs = (msg) => {
 
   if (msgArr.length - 1 === 0) return result;
   if (msgArr.length - 1 > 1) {
-    result.errors = new Discord.RichEmbed();
+    result.errors = new Discord.MessageEmbed();
     result.errors.setColor("RED");
     result.errors.setDescription("**Error**: Too many parameters");
     return result;
   }
   if (msg.mentions.members.size != 1) {
-    result.errors = new Discord.RichEmbed();
+    result.errors = new Discord.MessageEmbed();
     result.errors.setColor("RED");
     result.errors.setDescription("**Error**: You must mention a user with @");
     return result;
@@ -40,7 +40,7 @@ const checkArgs = (msg) => {
 
 const checkRecordArgs = (msg) => {
   const msgArr = msg.content.split(" ");
-  const errors = new Discord.RichEmbed();
+  const errors = new Discord.MessageEmbed();
   const gamesWon1 = Number(msgArr[2]);
   const gamesWon2 = Number(msgArr[4]);
 
@@ -82,9 +82,9 @@ const checkRecordArgs = (msg) => {
 };
 
 const checkMember = (member) => {
-  const errors = new Discord.RichEmbed();
+  const errors = new Discord.MessageEmbed();
 
-  if (member.roles.some((role) => role.name === validMember)) {
+  if (member.roles.cache.some((role) => role.name === validMember)) {
     return null;
   } else {
     errors.setColor("RED");
@@ -94,9 +94,9 @@ const checkMember = (member) => {
 };
 
 const checkMod = (msg) => {
-  const errors = new Discord.RichEmbed();
+  const errors = new Discord.MessageEmbed();
 
-  if (msg.member.roles.some((role) => (role.name === validMod) || (role.name === validStaff))) {
+  if (msg.member.roles.cache.some((role) => (role.name === validMod) || (role.name === validStaff))) {
     return null;
   } else {
     errors.setColor("RED");
