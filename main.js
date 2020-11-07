@@ -1,7 +1,6 @@
 const Discord = require("discord.js");
 const mongoose = require("mongoose");
 const Player = require("./models/Player");
-const Message = require("./models/Message");
 const config = require("./config/config");
 const commands = require("./services/commands");
 const client = new Discord.Client({ disabledEvents: ["TYPING_START"] });

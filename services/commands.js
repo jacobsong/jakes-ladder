@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const Message = require("../models/Message");
 const Player = require("../models/Player");
 const System = require('../models/System');
 const validator = require("./validator");
@@ -511,7 +510,6 @@ module.exports = {
   register,
   unregister,
   profile,
-  status,
   leaderboard,
   reset,
   resetboard,
