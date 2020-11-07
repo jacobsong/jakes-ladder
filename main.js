@@ -45,19 +45,6 @@ client.on('guildMemberRemove', async member => {
 
 // Respond to commands
 client.on("message", async message => {
-  try {
-    let msg = message.content || message.attachments.first().url;
-    await Message.updateOne(
-      { discordId: message.author.id },
-      {
-        $set: { discordId: message.author.id, lastMessage: msg, lastMessageDate: new Date() },
-        $inc: { messageCount: 1 }
-      },
-      { upsert: true })
-  } catch {
-    return;
-  }
-
   if (message.content === `${prefix}help`) {
     commands.help(message);
     message.delete({ timeout: 1500 });
@@ -75,11 +62,6 @@ client.on("message", async message => {
 
   if (message.content.startsWith(`${prefix}profile`)) {
     await commands.profile(message);
-    message.delete({ timeout: 1500 });
-  }
-
-  if (message.content.startsWith(`${prefix}status`)) {
-    await commands.status(message);
     message.delete({ timeout: 1500 });
   }
 

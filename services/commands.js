@@ -163,36 +163,6 @@ const profile = async msg => {
   }
 };
 
-const status = async (msg, client) => {
-  if (validator.isCommand(msg)) {
-    const embed = new Discord.MessageEmbed();
-    const result = validator.checkArgs(msg);
-    if (result.errors) { msg.channel.send(result.errors); return; }
-    if (result.numArgs > 0) {
-      let user = msg.mentions.users.first();
-      embed.setColor("PURPLE")
-        .setTitle(`:notepad_spiral: ${user.username}'s Activity Report`)
-        .setDescription(`Due to Discord's limitations of not allowing bots to use the search bar, I have decided to awaken my Sharingan and log everyone's chat history starting \`1-14-2020\``)
-        .setThumbnail(user.avatarURL({ dynamic: true }))
-      const result = await Message.findOne({ discordId: user.id }).lean();
-      if (result) {
-          embed.addField("Last Message", result.lastMessage, true)
-            .addField("Last Message Date", result.lastMessageDate.toDateString(), true)
-            .addField("Message Count", result.messageCount, true)
-      } else {
-          embed.addField("Last Message", "None", true)
-            .addField("Last Message Date", "N/A", true)
-            .addField("Message Count", 0, true)
-      }
-      msg.channel.send(embed);
-    } else {
-      embed.setColor("RED");
-      embed.setDescription("**Error**: You must mention a user with @");
-      msg.channel.send(embed);
-    }
-  }
-};
-
 const leaderboard = async (msg) => {
   const errors = validator.checkMod(msg);
   if (errors) { msg.channel.send(errors); return; }
