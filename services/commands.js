@@ -7,7 +7,6 @@ const help = (msg) => {
   const embed = new Discord.MessageEmbed()
     .setTitle("Command List")
     .setColor("BLUE")
-    .addField("**status**", "- Check a user's activity status")
     .addField("**register**", "- Registers yourself")
     .addField("**register** *<user>*", "- Registers the mentioned user")
     .addField("**unregister** *<userID>*", "- Unregisters the user ID")
