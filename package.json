@@ -10,7 +10,10 @@
   "author": "Jake S.",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.4.1",
-    "mongoose": "^5.10.11"
+    "discord.js": "^13.7.0",
+    "mongoose": "^6.3.5"
+  },
+  "devDependencies": {
+    "eslint": "^8.16.0"
   }
 }
