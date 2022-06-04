@@ -1,15 +1,19 @@
 {
   "name": "jakes-ladder",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ELO ladder system for 1v1 games Bo5",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node main.js",
-    "dev": "nodemon main.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "commands": "node deploy-commands.js"
   },
   "author": "Jake S.",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
+    "discord-api-types": "^0.33.2",
     "discord.js": "^13.7.0",
     "mongoose": "^6.3.5"
   },

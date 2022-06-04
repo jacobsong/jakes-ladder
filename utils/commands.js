@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 const Player = require('../models/Player');
-const System = require('../models/System');
 const validator = require('./validator');
 
 const help = (msg) => {
@@ -10,14 +9,7 @@ const help = (msg) => {
         .addField('**register**', '- Registers yourself')
         .addField('**register** *<user>*', '- Registers the mentioned user')
         .addField('**unregister** *<userID>*', '- Unregisters the user ID')
-        .addField('**profile**', '- Returns stats for yourself')
-        .addField('**profile** *<user>*', '- Returns stats for the mentioned user')
-        .addField('**bounties**', '- Fetches a list of people with bounties')
         .addField('**ducknofades**', '- Shows what ELO scores you should challenge')
-        .addField('**leaderboard**', '- Shows the leaderboard')
-        .addField('**reset** *<user>*', '- Resets stats for the mentioned user')
-        .addField('**resetboard**', '- Resets the leaderboard')
-        .addField('**deleteboard**', '- Deletes the leaderboard')
         .addField('**decay**', '- Decays ELO for players that have not played a match in 7 days')
         .addField('**record** *<user>* *<games-won>* *<user>* *<games-won>*',
             ['- Records a match between 2 players', '- Example: `=record @vizi 3 @sack 1`']);
@@ -120,207 +112,6 @@ const unregister = async (msg) => {
             embed.setDescription('Database error');
             msg.channel.send(embed);
         }
-    }
-};
-
-const profile = async msg => {
-    if (validator.isCommand(msg)) {
-        let playerId = msg.author.id;
-        let playerAvatar = msg.author.avatarURL({ dynamic: true });
-
-        const result = validator.checkArgs(msg);
-        if (result.errors) {
-            msg.channel.send(result.errors);
-            return;
-        }
-        if (result.numArgs > 0) {
-            const errors = validator.checkMember(msg.mentions.members.first());
-            if (errors) {
-                msg.channel.send(errors);
-                return;
-            }
-            playerId = msg.mentions.users.first().id;
-            playerAvatar = msg.mentions.users.first().avatarURL({ dynamic: true });
-        }
-
-        const embed = new Discord.MessageEmbed();
-
-        try {
-            const playerProfile = await Player.findOne({ discordId: playerId }).lean();
-
-            if (playerProfile) {
-                const days = Math.round((Date.now() - playerProfile.lastMatch.getTime()) / (24 * 60 * 60 * 1000));
-                let dayText = ' ';
-                const stats = `\`\`\`ELO:    ${playerProfile.elo}\nWins:   ${playerProfile.wins}\nLosses: ${playerProfile.losses}\nStreak: ${playerProfile.streak || 0}\`\`\``;
-
-                if (days === 0) dayText = 'Today';
-                if (days === 1) dayText = 'Yesterday';
-                if (days > 1) dayText = `${days} days ago`;
-                if (playerProfile.bounty) {
-                    embed.setAuthor(`⭐ Bounty ${playerProfile.prize} ELO`);
-                }
-
-                embed.setColor('LUMINOUS_VIVID_PINK');
-                embed.setTitle(playerProfile.discordName);
-                embed.setThumbnail(playerAvatar);
-                embed.setDescription(stats);
-                embed.setFooter(`Last match played: ${dayText}`);
-                msg.channel.send(embed);
-                return;
-            }
-
-            embed.setColor('BLUE');
-            embed.setDescription('Profile not found');
-            msg.channel.send(embed);
-
-        }
-        catch {
-            embed.setColor('RED');
-            embed.setDescription('Database error');
-            msg.channel.send(embed);
-        }
-    }
-};
-
-const leaderboard = async (msg) => {
-    const errors = validator.checkMod(msg);
-    if (errors) {
-        msg.channel.send(errors);
-        return;
-    }
-
-    const embed = new Discord.MessageEmbed();
-
-    try {
-        const players = await Player.find({}).select('elo discordName').sort({ elo: -1 }).lean();
-        const oldLeaderBoardId = await System.findOne({ paramName: 'oldLeaderBoardId' });
-
-        let board = '```';
-        for (let index = 0; index < players.length; index++) {
-            board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 14)}\n`;
-        }
-        board += '```';
-
-        embed.setTitle('Leaderboard');
-        embed.setColor('GOLD');
-        embed.setDescription(board);
-        const sentLeaderBoard = await msg.channel.send(embed);
-        if (oldLeaderBoardId === null) {
-            new System({ paramName: 'oldLeaderBoardId', paramValue: sentLeaderBoard.id }).save();
-        }
-        else if (oldLeaderBoardId.paramValue != null) {
-            try {
-                const oldMsg = await msg.channel.messages.fetch(oldLeaderBoardId.paramValue);
-                oldMsg.delete();
-                oldLeaderBoardId.paramValue = sentLeaderBoard.id;
-                oldLeaderBoardId.save();
-            }
-            catch {
-                oldLeaderBoardId.paramValue = sentLeaderBoard.id;
-                oldLeaderBoardId.save();
-            }
-        }
-    }
-    catch {
-        embed.setColor('RED');
-        embed.setDescription('Database error');
-        msg.channel.send(embed);
-    }
-};
-
-const reset = async (msg) => {
-    if (validator.isCommand(msg)) {
-        const playerId = msg.mentions.users.first().id;
-        const playerName = msg.mentions.users.first().username;
-        const playerMember = msg.mentions.members.first();
-        const result = validator.checkArgs(msg);
-        if (result.errors) {
-            msg.channel.send(result.errors);
-            return;
-        }
-        if (result.numArgs === 0) {
-            const missing = new Discord.MessageEmbed()
-                .setColor('RED')
-                .setDescription('**Error**: You must mention a user with @');
-            msg.channel.send(missing);
-            return;
-        }
-        if (result.numArgs > 0) {
-            const modErrors = validator.checkMod(msg);
-            if (modErrors) {
-                msg.channel.send(modErrors);
-                return;
-            }
-
-            const memberErrors = validator.checkMember(playerMember);
-            if (memberErrors) {
-                msg.channel.send(memberErrors);
-                return;
-            }
-
-            const embed = new Discord.MessageEmbed();
-
-            try {
-                const updateResult = await Player.updateOne({ discordId: playerId }, { $set: { elo: 1000, wins: 0, losses: 0 } });
-                if (updateResult.n == 1) {
-                    embed.setColor('GREEN');
-                    embed.setDescription(`**Success**, stats have been reset for ${playerName}`);
-                    msg.channel.send(embed);
-                    return;
-                }
-                embed.setColor('BLUE');
-                embed.setDescription('Player not found');
-                msg.channel.send(embed);
-                return;
-            }
-            catch {
-                embed.setColor('RED');
-                embed.setDescription('Database error');
-                msg.channel.send(embed);
-            }
-        }
-    }
-};
-
-const resetboard = async (msg) => {
-    const modErrors = validator.checkMod(msg);
-    if (modErrors) {
-        msg.channel.send(modErrors);
-        return;
-    }
-    const embed = new Discord.MessageEmbed();
-
-    try {
-        await Player.updateMany({}, { $set: { elo: 1000, wins: 0, losses: 0 } });
-        embed.setColor('GREEN');
-        embed.setDescription('**Success**, leaderboard has been reset');
-        msg.channel.send(embed);
-    }
-    catch {
-        embed.setColor('RED');
-        embed.setDescription('Database error');
-        msg.channel.send(embed);
-    }
-};
-
-const deleteboard = async (msg) => {
-    const modErrors = validator.checkMod(msg);
-    if (modErrors) {
-        msg.channel.send(modErrors);
-        return;
-    }
-    const embed = new Discord.MessageEmbed();
-
-    try {
-        await Player.deleteMany({});
-        embed.setColor('GREEN');
-        embed.setDescription('**Success**, leaderboard has been deleted');
-        msg.channel.send(embed);
-    }
-    catch {
-        embed.setColor('RED');
-        embed.setDescription('Database error');
-        msg.channel.send(embed);
     }
 };
 
@@ -543,42 +334,11 @@ const ducknofades = async (msg) => {
     }
 };
 
-const bounties = async (msg) => {
-    const embed = new Discord.MessageEmbed();
-
-    try {
-        const players = await Player.find({ bounty: true }).select('discordName streak bounty prize').sort({ prize: -1 }).lean();
-        if (players.length) {
-            embed.setTitle(':moneybag: :moneybag: :moneybag:');
-            embed.setColor('DARK_GOLD');
-            players.forEach(player => {
-                embed.addField(`${player.discordName}`, `\`\`\`Prize:  ${player.prize} ELO\nStreak: ${player.streak} Kills\`\`\``);
-            });
-        }
-        else {
-            embed.setColor('DARK_GOLD');
-            embed.setDescription('No bounties');
-        }
-        msg.channel.send(embed);
-    }
-    catch {
-        embed.setColor('RED');
-        embed.setDescription('Database error');
-        msg.channel.send(embed);
-    }
-};
-
 module.exports = {
     help,
     register,
     unregister,
-    profile,
-    leaderboard,
-    reset,
-    resetboard,
-    deleteboard,
     decay,
     record,
-    ducknofades,
-    bounties
+    ducknofades
 };
