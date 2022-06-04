@@ -1,19 +1,30 @@
-const Discord = require('discord.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, Collection, Intents } = require('discord.js');
 const mongoose = require('mongoose');
 const Player = require('./models/Player');
 const config = require('./config/config');
-const commands = require('./services/commands');
-const client = new Discord.Client({ disabledEvents: ['TYPING_START'] });
-const prefix = '=';
+const validator = require('./utils/validator');
+
+
+const client = new Client({ intents: [Intents.FLAGS.GUILDS], disabledEvents: ['TYPING_START'] });
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    client.commands.set(command.data.name, command);
+}
 
 // Verify connected and set presence
 client.once('ready', () => {
-    console.log('Connected as ' + client.user.tag);
-    client.user.setPresence({ game: { name: 'type =help' } });
+    console.log('Logged in as ' + client.user.tag);
 });
 
 // Connect to MongoDB Atlas
-mongoose.connect(config.mongoURI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
+mongoose.connect(config.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true }).then(
     () => {
         console.log('MongoDB connected...');
     },
@@ -44,68 +55,20 @@ client.on('guildMemberRemove', async member => {
     }
 });
 
-// Respond to commands
-client.on('message', async message => {
-    if (message.content === `${prefix}help`) {
-        commands.help(message);
-        message.delete({ timeout: 1500 });
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) return;
+    if (!validator.hasPermissions(interaction, command)) return;
+
+    try {
+        await command.execute(interaction);
     }
-
-    if (message.content.startsWith(`${prefix}register`)) {
-        await commands.register(message);
-        message.delete({ timeout: 1500 });
-    }
-
-    if (message.content.startsWith(`${prefix}unregister`)) {
-        await commands.unregister(message);
-        message.delete({ timeout: 1500 });
-    }
-
-    if (message.content.startsWith(`${prefix}profile`)) {
-        await commands.profile(message);
-        message.delete({ timeout: 1500 });
-    }
-
-    if (message.content === (`${prefix}ducknofades`)) {
-        await commands.ducknofades(message);
-        message.delete({ timeout: 1500 });
-    }
-
-    if (message.content === (`${prefix}bounties`)) {
-        await commands.bounties(message);
-        message.delete({ timeout: 1500 });
-    }
-
-    if (message.channel.name === 'leaderboard') {
-        if (message.content === `${prefix}leaderboard`) {
-            await commands.leaderboard(message);
-            message.delete({ timeout: 1500 });
-        }
-
-        if (message.content.startsWith(`${prefix}reset`)) {
-            await commands.reset(message);
-            message.delete({ timeout: 1500 });
-        }
-
-        if (message.content === `${prefix}resetboard`) {
-            await commands.resetboard(message);
-            message.delete({ timeout: 1500 });
-        }
-
-        if (message.content === `${prefix}deleteboard`) {
-            await commands.deleteboard(message);
-            message.delete({ timeout: 1500 });
-        }
-
-        if (message.content === `${prefix}decay`) {
-            await commands.decay(message);
-            message.delete({ timeout: 1500 });
-        }
-
-        if (message.content.startsWith(`${prefix}record`)) {
-            await commands.record(message);
-            message.delete({ timeout: 1500 });
-        }
+    catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
 });
 
