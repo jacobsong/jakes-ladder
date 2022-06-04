@@ -83,7 +83,7 @@ const recordGame = async (interaction, winner, loser, winnerGames, loserGames) =
         .addField(`${loser.username}`, codeBlock(`ELO:  ${loserOldELO} => ${newELOs.loserRating}`))
         .setFooter({ text: footer });
 
-    await interaction.editReply({ content: `${winner} ${loser} Ranked match confirmed`, embeds: [embed] });
+    await interaction.editReply({ content: `${winner} ${loser} Ranked match confirmed`, embeds: [embed], components: [] });
 };
 
 module.exports = {

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const { recordGame } = require('../utils/utils');
 const { isValidRecord } = require('../utils/validator');
 
@@ -26,40 +27,40 @@ module.exports = {
         const embed = new MessageEmbed().setColor('PURPLE')
             .setTitle(`${loser.username}, Please confirm the results`)
             .setAuthor({ name: `${winner.username} won ${winnerGames} - ${loserGames}`, iconURL: winner.avatarURL({ dynamic: true }) })
-            .setDescription(`👑 **Winner:** ${winner.username}\n❌ **Loser:** ${loser.username}`)
-            .setFooter({ text: 'The loser must react with ✅ in order for the set to be recorded', iconURL: loser.avatarURL({ dynamic: true }) });
+            .setDescription(`🟢  **Winner:** ${winner.username}\n🔴  **Loser:** ${loser.username}`)
+            .setFooter({ text: 'The loser must click the Confirm button in order for the set to be recorded', iconURL: loser.avatarURL({ dynamic: true }) });
 
-        const message = await interaction.reply({ content: `${winner} ${loser} Ranked match confirmation`, embeds: [embed], fetchReply: true });
-        await message.react('✅');
-        await message.react('❌');
+        const row = new MessageActionRow().addComponents(
+            new MessageButton().setCustomId('confirm').setLabel('Confirm').setStyle('SUCCESS'),
+            new MessageButton().setCustomId('reject').setLabel('Reject').setStyle('DANGER'),
+        );
+
+        const message = await interaction.reply({ content: `${winner} ${loser} Ranked match result`, embeds: [embed], components: [row], fetchReply: true });
+
+        const filter = i => {
+            i.deferUpdate();
+            return i.user.id === loser.id;
+        };
 
         try {
-            const filter = (reaction, user) => {
-                return ['✅', '❌'].includes(reaction.emoji.name) && user.id === loser.id;
-            };
+            const collected = await message.awaitMessageComponent({ filter, componentType: 'BUTTON', time: 60000 });
 
-            const collected = await message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] });
-
-            if (collected.size) {
-                message.reactions.removeAll();
-                if (collected.first().emoji.name === '✅') {
-                    recordGame(interaction, winner, loser, winnerGames, loserGames);
-                }
-                else {
-                    embed.setColor('RED')
-                        .setTitle(`${loser.username} Rejected the results. Match not recorded.`)
-                        .setFooter({ text: 'The loser rejected the results', iconURL: loser.avatarURL({ dynamic: true }) });
-                    interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed] });
-                }
+            if (collected.customId === 'confirm') {
+                recordGame(interaction, winner, loser, winnerGames, loserGames);
+            }
+            else {
+                embed.setColor('RED')
+                    .setTitle(`${loser.username} Rejected the results. Match not recorded.`)
+                    .setFooter({ text: 'The loser rejected the results', iconURL: loser.avatarURL({ dynamic: true }) });
+                interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed], components: [] });
             }
         }
         catch (e) {
-            message.reactions.removeAll();
             interaction.user.send('Your opponent did not verify the results within 1 minute');
             embed.setColor('RED')
                 .setTitle(`${loser.username} Did NOT confirm the results. Match not recorded.`)
                 .setFooter({ text: 'The loser did not respond in time', iconURL: loser.avatarURL({ dynamic: true }) });
-            interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed] });
+            interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed], components: [] });
             return;
         }
     }

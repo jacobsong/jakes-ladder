@@ -26,21 +26,22 @@ module.exports = {
             return i.user.id === interaction.user.id;
         };
 
-        message.awaitMessageComponent({ filter, componentType: 'BUTTON', time: 10000 })
-            .then(async i => {
-                if (i.customId === 'confirm') {
-                    const success = new MessageEmbed().setColor('GREEN').setDescription('**Success**, leaderboard has been deleted. New season begins.');
-                    await Player.deleteMany({});
-                    interaction.editReply({ embeds: [success], components: [] });
-                }
-                else {
-                    interaction.deleteReply();
-                    interaction.followUp({ content: 'You clicked cancel', ephemeral: true });
-                }
-            })
-            .catch(() => {
+        try {
+            const collected = await message.awaitMessageComponent({ filter, componentType: 'BUTTON', time: 10000 });
+
+            if (collected.customId === 'confirm') {
+                const success = new MessageEmbed().setColor('GREEN').setDescription('**Success**, leaderboard has been deleted. New season begins.');
+                await Player.deleteMany({});
+                interaction.editReply({ embeds: [success], components: [] });
+            }
+            else {
                 interaction.deleteReply();
-                interaction.followUp({ content: 'You did not answer', ephemeral: true });
-            });
+                interaction.followUp({ content: 'You clicked cancel', ephemeral: true });
+            }
+        }
+        catch (e) {
+            interaction.deleteReply();
+            interaction.followUp({ content: 'You did not answer', ephemeral: true });
+        }
     }
 };
