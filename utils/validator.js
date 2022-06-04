@@ -7,7 +7,7 @@ const hasPermissions = (interaction, command) => {
             return true;
         }
         else {
-            interaction.reply('You are not a mod');
+            interaction.reply({ content: `You do not have the ${validMod} or ${validStaff} role`, ephemeral: true });
             return false;
         }
     }
@@ -16,6 +16,16 @@ const hasPermissions = (interaction, command) => {
     }
 };
 
+const isValidRecord = (interaction, winner, loser) => {
+    if (winner.id === loser.id) {
+        interaction.reply({ content: 'Winner and Loser cannot be the same person', ephemeral: true });
+        return false;
+    }
+
+    return true;
+};
+
 module.exports = {
-    hasPermissions
+    hasPermissions,
+    isValidRecord
 };

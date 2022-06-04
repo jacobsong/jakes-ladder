@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const utils = require('../utils/utils');
+const { recordGame } = require('../utils/utils');
+const { isValidRecord } = require('../utils/validator');
 
 module.exports = {
     adminRequired: false,
@@ -14,35 +15,51 @@ module.exports = {
             { name: '1', value: 1 },
             { name: '2', value: 2 })),
     async execute(interaction) {
-        const embed = new MessageEmbed();
         const winner = interaction.options.getUser('winner');
         const loser = interaction.options.getUser('loser');
+
+        if (!isValidRecord(interaction, winner, loser)) return;
+
         const winnerGames = 3;
         const loserGames = interaction.options.getInteger('loser-games');
 
-        embed.setAuthor({ name: `${winner.username} won ${winnerGames} - ${loserGames}`, iconURL: winner.avatarURL({ dynamic: true }) });
-        embed.setTitle(`${loser.username} please confirm the results`);
-        embed.setDescription(`👑 **Winner:** ${winner.username}\n❌ **Loser:** ${loser.username}`);
-        embed.setColor('GREEN');
-        embed.setFooter({ text: 'The loser must react with ✅ in order for the set to be recorded', iconURL: loser.avatarURL({ dynamic: true }) });
+        const embed = new MessageEmbed().setColor('PURPLE')
+            .setTitle(`${loser.username}, Please confirm the results`)
+            .setAuthor({ name: `${winner.username} won ${winnerGames} - ${loserGames}`, iconURL: winner.avatarURL({ dynamic: true }) })
+            .setDescription(`👑 **Winner:** ${winner.username}\n❌ **Loser:** ${loser.username}`)
+            .setFooter({ text: 'The loser must react with ✅ in order for the set to be recorded', iconURL: loser.avatarURL({ dynamic: true }) });
+
+        const message = await interaction.reply({ content: `${winner} ${loser} Ranked match confirmation`, embeds: [embed], fetchReply: true });
+        await message.react('✅');
+        await message.react('❌');
 
         try {
-            const message = await interaction.reply({ content: `${winner} ${loser} ranked match confirmation`, embeds: [embed], fetchReply: true });
-            await message.react('✅');
-
             const filter = (reaction, user) => {
-                return reaction.emoji.name === '✅' && user.id === loser.id;
+                return ['✅', '❌'].includes(reaction.emoji.name) && user.id === loser.id;
             };
 
             const collected = await message.awaitReactions({ filter, max: 1, time: 60000, errors: ['time'] });
 
             if (collected.size) {
                 message.reactions.removeAll();
-                utils.recordGame(interaction, winner, loser, winnerGames, loserGames);
+                if (collected.first().emoji.name === '✅') {
+                    recordGame(interaction, winner, loser, winnerGames, loserGames);
+                }
+                else {
+                    embed.setColor('RED')
+                        .setTitle(`${loser.username} Rejected the results. Match not recorded.`)
+                        .setFooter({ text: 'The loser rejected the results', iconURL: loser.avatarURL({ dynamic: true }) });
+                    interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed] });
+                }
             }
         }
         catch (e) {
+            message.reactions.removeAll();
             interaction.user.send('Your opponent did not verify the results within 1 minute');
+            embed.setColor('RED')
+                .setTitle(`${loser.username} Did NOT confirm the results. Match not recorded.`)
+                .setFooter({ text: 'The loser did not respond in time', iconURL: loser.avatarURL({ dynamic: true }) });
+            interaction.editReply({ content: `${winner} ${loser} Ranked match NOT confirmed`, embeds: [embed] });
             return;
         }
     }

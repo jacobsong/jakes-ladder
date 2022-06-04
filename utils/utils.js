@@ -21,8 +21,6 @@ const calculateELO = (winnerELO, loserELO, winnerGames, loserGames) => {
 };
 
 const recordGame = async (interaction, winner, loser, winnerGames, loserGames) => {
-    const embed = new MessageEmbed();
-
     let winnerPlayer = await Player.findOne({ discordId: winner.id });
     let loserPlayer = await Player.findOne({ discordId: loser.id });
 
@@ -78,13 +76,14 @@ const recordGame = async (interaction, winner, loser, winnerGames, loserGames) =
     await winnerPlayer.save();
     await loserPlayer.save();
 
-    embed.setColor('AQUA');
-    embed.setDescription(`${winner.username} wins ${winnerGames}-${loserGames}`);
-    embed.setThumbnail('https://cdn.discordapp.com/emojis/590002598338363423.png?v=1');
-    embed.addField(`${winner.username}`, codeBlock(eloFieldMsg));
-    embed.addField(`${loser.username}`, codeBlock(`ELO:  ${loserOldELO} => ${newELOs.loserRating}`));
-    embed.setFooter({ text: footer });
-    await interaction.editReply({ content: `${winner} ${loser} ranked match confirmed - ${winner.username} won`, embeds: [embed] });
+    const embed = new MessageEmbed().setColor('AQUA')
+        .setDescription(`${winner.username} won ${winnerGames}-${loserGames}`)
+        .setThumbnail('https://cdn.discordapp.com/emojis/590002598338363423.png?v=1')
+        .addField(`${winner.username}`, codeBlock(eloFieldMsg))
+        .addField(`${loser.username}`, codeBlock(`ELO:  ${loserOldELO} => ${newELOs.loserRating}`))
+        .setFooter({ text: footer });
+
+    await interaction.editReply({ content: `${winner} ${loser} Ranked match confirmed`, embeds: [embed] });
 };
 
 module.exports = {

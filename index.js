@@ -6,11 +6,10 @@ const Player = require('./models/Player');
 const config = require('./config/config');
 const validator = require('./utils/validator');
 
-
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], disabledEvents: ['TYPING_START'] });
-client.commands = new Collection();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+client.commands = new Collection();
 
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
@@ -29,7 +28,8 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useUnifiedTopology: t
         console.log('MongoDB connected...');
     },
     err => {
-        console.log('MongoDB could not connect...' + err);
+        console.error(err);
+        console.log('MongoDB could not connect...');
     }
 );
 
@@ -37,11 +37,12 @@ mongoose.connect(config.mongoURI, { useNewUrlParser: true, useUnifiedTopology: t
 client.on('userUpdate', async (oldUser, newUser) => {
     try {
         await Player.updateOne({ discordId: oldUser.id },
-            { $set: { discordName: newUser.username, discordAvatar: newUser.avatarURL({ dynamic: true }) } }
+            { $set: { discordName: newUser.username } }
         );
     }
-    catch {
-        console.log('Error updating user\'s discordName/avatar');
+    catch (e) {
+        console.error(e);
+        console.log('Error updating user\'s discordName or avatar');
     }
 });
 
@@ -50,7 +51,8 @@ client.on('guildMemberRemove', async member => {
     try {
         await Player.deleteOne({ discordId: member.id });
     }
-    catch {
+    catch (e) {
+        console.error(e);
         console.log('Error deleting guild member');
     }
 });
@@ -76,6 +78,7 @@ client.on('interactionCreate', async interaction => {
 try {
     client.login(config.token);
 }
-catch {
+catch (e) {
+    console.error(e);
     console.log('Failed to login to Discord');
 }

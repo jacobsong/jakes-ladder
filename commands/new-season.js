@@ -8,10 +8,8 @@ module.exports = {
         .setName('new-season')
         .setDescription('Reset the leaderboard for a new season'),
     async execute(interaction) {
-        const embed = new MessageEmbed();
+        const embed = new MessageEmbed().setColor('GREEN').setDescription('**Success**, leaderboard has been deleted. New season begins.');
         await Player.deleteMany({});
-        embed.setColor('GREEN');
-        embed.setDescription('**Success**, leaderboard has been deleted');
         interaction.reply({ embeds: [embed] });
     }
 };

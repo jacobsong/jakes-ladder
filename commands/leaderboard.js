@@ -9,7 +9,7 @@ module.exports = {
         .setName('leaderboard')
         .setDescription('Shows the leaderboard'),
     async execute(interaction) {
-        const embed = new MessageEmbed();
+        const embed = new MessageEmbed().setTitle('Leaderboard').setColor('BLURPLE');
         const players = await Player.find({}).select('elo discordName').sort({ elo: -1 }).lean();
 
         let board = '';
@@ -17,10 +17,11 @@ module.exports = {
             board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 14)}\n`;
         }
 
-        embed.setTitle('Leaderboard');
-        embed.setColor('GOLD');
+        if (board === '') {
+            board = 'No data found';
+        }
+
         embed.setDescription(codeBlock(board));
         interaction.reply({ embeds: [embed] });
-
-    },
+    }
 };
