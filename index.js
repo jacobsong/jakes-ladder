@@ -7,7 +7,7 @@ const config = require('./config/config');
 const validator = require('./utils/validator');
 
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS], disabledEvents: ['TYPING_START'] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], disabledEvents: ['TYPING_START'] });
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
