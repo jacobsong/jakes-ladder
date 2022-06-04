@@ -9,7 +9,7 @@ module.exports = {
         .setName('bounties')
         .setDescription('Shows a list of people with bounties'),
     async execute(interaction) {
-        const embed = new MessageEmbed().setColor('DARK_GOLD').setTitle(':moneybag: :moneybag: :moneybag:');
+        const embed = new MessageEmbed().setColor('GOLD').setTitle(':moneybag: :moneybag: :moneybag:');
         const players = await Player.find({ bounty: true }).select('discordName streak bounty prize').sort({ prize: -1 }).lean();
 
         if (players.length) {

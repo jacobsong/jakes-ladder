@@ -76,7 +76,7 @@ const recordGame = async (interaction, winner, loser, winnerGames, loserGames) =
     await winnerPlayer.save();
     await loserPlayer.save();
 
-    const embed = new MessageEmbed().setColor('AQUA')
+    const embed = new MessageEmbed().setColor('#0099ff')
         .setDescription(`${winner.username} won ${winnerGames}-${loserGames}`)
         .setThumbnail('https://cdn.discordapp.com/emojis/590002598338363423.png?v=1')
         .addField(`${winner.username}`, codeBlock(eloFieldMsg))
