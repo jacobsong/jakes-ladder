@@ -42,12 +42,10 @@ const recordGame = async (interaction, winner, loser, winnerGames, loserGames) =
     loserPlayer.losses += 1;
     loserPlayer.elo = newELOs.loserRating;
     loserPlayer.lastMatch = Date.now();
-
-    let eloFieldMsg = '';
-
     winnerPlayer.streak += 1;
     loserPlayer.streak = 0;
 
+    let eloFieldMsg = '';
     let footer = '';
 
     if (winnerPlayer.bounty) {

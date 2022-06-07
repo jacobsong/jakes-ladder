@@ -56,7 +56,7 @@ module.exports = {
             }
         }
         catch (e) {
-            interaction.user.send('Your opponent did not verify the results within 1 minute');
+            interaction.user.send('The loser did not verify the results within 1 minute');
             embed.setColor('RED')
                 .setTitle(`${loser.username} Did NOT confirm the results. Match not recorded.`)
                 .setFooter({ text: 'The loser did not respond in time', iconURL: loser.avatarURL({ dynamic: true }) });

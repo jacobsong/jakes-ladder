@@ -17,11 +17,7 @@ module.exports = {
             board += `#${index + 1} - ELO: ${players[index].elo} ${players[index].discordName.substring(0, 14)}\n`;
         }
 
-        if (board === '') {
-            board = 'No data found';
-        }
-
-        embed.setDescription(codeBlock(board));
+        embed.setDescription(codeBlock(board || 'No data found'));
         interaction.reply({ embeds: [embed] });
     }
 };

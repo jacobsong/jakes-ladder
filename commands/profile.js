@@ -29,7 +29,7 @@ module.exports = {
                 .setTitle(player.tag)
                 .setThumbnail(player.avatarURL({ dynamic: true }))
                 .setDescription(codeBlock(stats))
-                .setFooter({ text: `Last match played: ${lastPlayedDate}` });
+                .setFooter({ text: `⏱️ Last match played: ${lastPlayedDate}` });
 
             if (playerProfile.bounty) {
                 embed.setAuthor({ name: `⭐ Bounty ${playerProfile.prize} ELO` });
